@@ -28,8 +28,8 @@ flowchart LR
     sol --> answer["verified synthesis"]
 ```
 
-The current Codex task is the Sol orchestrator. Workers are bounded, do not
-spawn recursively, and return evidence rather than raw transcripts.
+The primary agent is the Sol orchestrator. Workers are bounded, do not spawn
+recursively, and return evidence rather than raw transcripts.
 
 ## Model and execution routes
 
@@ -78,6 +78,12 @@ JSON result. This route is not sidebar-visible.
 - Use `read-only` for exploration, review, research, logs, and test inspection.
   Use `workspace-write` only for implementation tasks with disjoint ownership.
 - Run dependent or overlapping tasks in separate sequential runner invocations.
+- Bound each CLI invocation with a host-level timeout and monitor the runner and
+  child processes. If it exceeds the timeout, terminate it and classify the
+  affected workers as incomplete; do not synthesize missing reports.
+- On a timeout or failed aggregate result, retry once with fewer workers or use
+  the documented native Terra fallback when exact Luna execution is unavailable.
+  Report the actual route, model, failed worker IDs, and remaining evidence gap.
 
 ## Worker Spec
 
@@ -102,6 +108,8 @@ Write a temporary JSON spec outside committed project files:
 
 Give write workers disjoint files or components. Include all task-local context,
 success criteria, evidence requirements, and scope boundaries in each prompt.
+Require each worker's final message to name findings or changes, files inspected
+or modified, commands/tests run, evidence, and remaining risks.
 
 Run the workers from the target repository directory:
 

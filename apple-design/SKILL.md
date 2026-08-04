@@ -9,6 +9,14 @@ How Apple builds interfaces that stop feeling like a computer and start feeling 
 
 The through-line: **an interface feels alive when motion starts from the current on-screen value, inherits the user's velocity, projects momentum forward, and can be grabbed and reversed at any instant.** Springs are the tool that makes all of this natural, because they are inherently interruptible and velocity-aware.
 
+## Preflight
+
+Before prescribing motion or materials, identify the framework and animation
+library, browser/device targets, input modality, accessibility preferences,
+performance budget, and whether the interaction is functional or decorative.
+State assumptions when any of these are unknown, and verify library/browser
+behavior before presenting a rule as universal.
+
 ## The Core Idea
 
 > "When we align the interface to the way we think and move, something magical happens — it stops feeling like a computer and starts feeling like a seamless extension of us."
@@ -77,7 +85,10 @@ Apple deliberately replaced the physics triplet (mass/stiffness/damping) with tw
 - Start most UI at **damping `1.0`** (critically damped) — graceful and non-distracting.
 - Add bounce (**damping ~`0.8`**) **only when the gesture itself carried momentum** (a flick, a throw, a drag release). Overshoot on a menu that just faded in feels wrong; overshoot on a card you flicked feels right.
 
-**Concrete values Apple ships:**
+**Illustrative starting values:**
+
+Use these as starting points, not universal Apple requirements; verify the
+platform version, interaction, and library semantics before standardizing them.
 
 | Interaction | Damping | Response |
 | --- | --- | --- |
@@ -85,7 +96,11 @@ Apple deliberately replaced the physics triplet (mass/stiffness/damping) with tw
 | Rotation | `0.8` | `0.4` |
 | Drawer / sheet | `0.8` | `0.3` |
 
-**Web mapping (Motion / Framer Motion):** the `bounce` + `duration` spring API maps closely to Apple's damping + response. A safe house style is `damping: 1.0` springs everywhere by default; reserve bounce for momentum-driven, physical interactions.
+**Web mapping (Motion / Framer Motion):** the `bounce` + `duration` spring API
+can approximate Apple's damping + response, but the mapping depends on the
+library and version. Profile the target interaction instead of assuming exact
+equivalence. A safe house style is `damping: 1.0` springs everywhere by
+default; reserve bounce for momentum-driven, physical interactions.
 
 ```js
 import { animate } from 'motion';
@@ -166,7 +181,7 @@ Smoothness is about *what's in the frames*, not just the frame rate.
 
 - Keep the per-frame positional change below the perception threshold to avoid strobing.
 - For very fast motion, a subtle **motion blur / stretch** encodes speed and reads better than a hard sharp streak.
-- `requestAnimationFrame` is the web's display-synced clock (Apple uses `CADisplayLink`). Animate only compositor-friendly properties — `transform` and `opacity` — and hint with `will-change` where motion is imminent.
+- `requestAnimationFrame` is the web's display-synced clock (Apple uses `CADisplayLink`). Prefer compositor-friendly properties such as `transform` and `opacity`, but verify browser behavior and use `will-change` only where motion is imminent.
 
 ## 12. Materials & depth — translucency conveys hierarchy
 
@@ -201,8 +216,8 @@ Three rules for combining senses (from *Designing Audio-Haptic Experiences*):
 Reduced motion doesn't mean *no* feedback — it means a gentler, non-vestibular equivalent. Respond to three independent signals and bake them into your components:
 
 - **`prefers-reduced-motion: reduce`** — replace slides/springs/parallax with short opacity **cross-fades or static transitions**. Drop elastic/overshoot. Keep opacity/color changes that aid comprehension.
-- **`prefers-reduced-transparency: reduce`** — make translucent surfaces frostier/solid: raise background opacity, drop the blur.
-- **`prefers-contrast: more`** — near-solid backgrounds with a defined, contrasting border.
+- **`prefers-reduced-transparency: reduce` (where supported)** — make translucent surfaces frostier/solid: raise background opacity, drop the blur.
+- **`prefers-contrast: more` (where supported)** — near-solid backgrounds with a defined, contrasting border.
 
 Also: avoid full-viewport moving backgrounds, slow looping oscillations (near 0.2 Hz / one cycle per 5s), and abrupt brightness jumps (ease dark↔light theme changes). Make large moving objects semi-transparent while they travel, and fade big surfaces out during a large reposition and back in once settled.
 
@@ -238,7 +253,10 @@ Apple designs type to change shape with size; the same discipline applies on the
 
 ## 16. Design foundations — the eight principles
 
-The motion and craft above serve Apple's eight design principles (*Principles of Great Design*, WWDC 2026). Use these as the names you reason with:
+The motion and craft above can be organized with the eight design principles
+described in *Principles of Great Design* (WWDC 2026). Treat these as a
+reasoning vocabulary, and verify the source/version before presenting them as
+an official or universal requirement:
 
 1. **Purpose.** Make with intention; decide what *not* to build. Every feature asks for the user's time, attention, and trust — spend that budget only where it pays off.
 2. **Agency.** Keep people in control: offer choices, don't force a single path. Back it with forgiveness — easy undo for slips, a confirmation dialog only for genuinely destructive, irreversible actions (use sparingly; overusing it trains people to click through).

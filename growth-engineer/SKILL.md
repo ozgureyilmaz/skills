@@ -160,12 +160,4 @@ Append to an existing learning log when available. Otherwise include a structure
 
 Before responding, verify that every metric claim has a definition/source/window and evidence status; no owners, dates, baselines, or statistical values were invented; causal language matches the evaluation design; unexecuted actions are labeled as proposed; and the output mode fits the request.
 
-## Sources and perspective
-
-The role boundaries and work examples are practitioner perspectives, not universal laws. Adapt them to the company's stage, product, and org design.
-
-- https://alexeymk.com/growth-eng
-- https://www.jaysahnan.com/blog/what-is-a-growth-engineer
-- https://mimrgrowthlab.com/what-is-growth-engineer
-- https://growthmethod.com/growth-loops/
-- https://growthmethod.com/growth-engineer/
+For source provenance and the practitioner perspectives behind the role examples, see [references/provenance.md](references/provenance.md). Treat those sources as context, not universal org-design rules.
