@@ -1,22 +1,69 @@
-# Agent Skills
+# agent skills
 
-Collection of reusable agent skills for Claude Code, Pi, OpenCode, and other AI coding assistants.
+🧰 *reusable operating manuals for capable agents*
 
-## Skills
+portable skills for claude code, pi, opencode, codex, and other ai coding assistants.
 
-| Skill | Description | Source |
+## features
+
+focused workflows: practical guidance for building, reviewing, researching, and shipping.
+
+portable packages: each skill is a self-contained directory with optional scripts, agents, and references.
+
+clear boundaries: skills explain when to use them, what to inspect, and how to validate the result.
+
+lowercase names: copy a skill directory into the agent runtime you use.
+
+## skills
+
+| skill | description | source |
 |-------|-------------|--------|
-| `skill-creator` | Guide for creating effective skills. Use when users want to create or update a skill. | [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills/skill-creator) |
-| `test-driven-development` | TDD workflow guide (Red → Green → Refactor) with language-specific patterns. | Local |
-| `workflow-skill-design` | Design patterns for building workflow-based skills with multi-step phases, decision trees, and progressive disclosure. | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/workflow-skill-design) |
-| `building-secure-contracts` | Smart contract security skills — vulnerability scanners (Solana, Cosmos, Cairo, Algorand, Substrate, TON), audit prep, code maturity assessment, token integration analysis, and secure workflow guidance. | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/building-secure-contracts) |
-| `modern-python` | Modern Python development with `uv`, `ruff`, `pyproject.toml`, PEP 723 scripts, testing, security setup, and migration checklists. Includes hooks/shims for enforcing best practices. | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/modern-python) |
-| `ask-questions-if-underspecified` | Prompts the agent to ask clarifying questions instead of making assumptions when a request is ambiguous or underspecified. | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/ask-questions-if-underspecified) |
+| `growth-engineer` | evidence-driven product and gtm growth engineering: lifecycle constraints, funnels, loops, instrumentation, experiments, and rollouts. | local |
+| `orchestrator` | plan complex work with bounded workers, parallel research, implementation, testing, and verified synthesis. | local |
+| `design-eng` | ui polish, component design, animation decisions, and the small details that make software feel right. | local |
+| `apple-design` | apple-style interface foundations: direct manipulation, spring motion, gesture physics, materials, typography, and reduced motion. | local |
+| `skill-creator` | guide for creating effective skills and reusable agent instructions. | [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills/skill-creator) |
+| `test-driven-development` | tdd workflow guide with red → green → refactor and language-specific patterns. | local |
+| `workflow-skill-design` | patterns for building workflow-based skills with phases, decision trees, and progressive disclosure. | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/workflow-skill-design) |
+| `building-secure-contracts` | smart contract security skills for vulnerability scanning, audit preparation, maturity, token integration, and secure workflows. | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/building-secure-contracts) |
+| `modern-python` | modern python development with uv, ruff, pyproject.toml, testing, security setup, and migration checklists. | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/modern-python) |
+| `ask-questions-if-underspecified` | prompts the agent to clarify ambiguous or underspecified requests before implementation. | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/ask-questions-if-underspecified) |
+| `evmbench` | smart contract security auditing guidance using the evmbench benchmark framework. | local |
+| `linear-pm-workflow` | project-management workflow for breaking down product requirements and tracking implementation. | local |
 
-## Usage
+## install
 
-Skills can be used by placing them in:
+```bash
+git clone https://github.com/ozgureyilmaz/skills ~/agent-skills
+cp -R ~/agent-skills/growth-engineer ~/.codex/skills/
+```
 
-- **Global**: `~/.claude/skills/` — available in all projects
-- **Per-project**: `<project>/.claude/skills/` — available in a specific project
-- **Packaged**: `.skill` files can be installed via `claude install-skill <path>`
+replace `growth-engineer` with any skill directory above. for claude code, copy the directory into `~/.claude/skills/`; for a project-only install, use `<project>/.claude/skills/`.
+
+## usage
+
+invoke a skill by name when your agent supports skill instructions:
+
+```text
+use $growth-engineer to diagnose this activation problem
+use $orchestrator to delegate the repository audit
+use $apple-design to review this gesture interaction
+```
+
+skills can also be read directly from their `SKILL.md` files when working in an environment without automatic discovery.
+
+## development
+
+when adding or removing a skill:
+
+1. keep the directory name lowercase.
+2. include a `SKILL.md` with `name` first and `description` last in frontmatter.
+3. update this table.
+4. keep scripts portable and exclude generated files.
+5. run the relevant validation before opening a pull request.
+
+## links
+
+- [issues](https://github.com/ozgureyilmaz/skills/issues)
+- [repository](https://github.com/ozgureyilmaz/skills)
+- [skill authoring guide](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
