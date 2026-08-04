@@ -1,0 +1,4 @@
+interface:
+  display_name: "Apple Design"
+  short_description: "Apple-style motion and interface design"
+  default_prompt: "Use $apple-design to design or review a fluid Apple-style web interface."

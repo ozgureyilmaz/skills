@@ -1,0 +1,4 @@
+interface:
+  display_name: "Orchestrator"
+  short_description: "Orchestrate visible workers or exact Luna runs"
+  default_prompt: "Use $orchestrator to plan with Sol, show native worker activity in the sidebar, and synthesize a verified result."
