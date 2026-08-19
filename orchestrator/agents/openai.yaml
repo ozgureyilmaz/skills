@@ -1,4 +1,4 @@
 interface:
   display_name: "Orchestrator"
   short_description: "Orchestrate visible workers or exact Luna runs"
-  default_prompt: "Use $orchestrator to plan with Sol, show native worker activity in the sidebar, and synthesize a verified result."
+  default_prompt: "Use $orchestrator with a gpt-5.6-sol/xhigh primary when available to split a complex task into exactly three bounded workers, preferring Luna/xhigh and reporting any Terra fallback; request sidebar activity only when you want native workers shown."

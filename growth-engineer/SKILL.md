@@ -1,163 +1,91 @@
 ---
 name: growth-engineer
-description: "Diagnose and execute evidence-driven product and GTM growth engineering: lifecycle constraints, funnels, growth loops, instrumentation, experimentation, channel tooling, and feature-flagged rollouts. Use for activation, retention, conversion, acquisition mechanisms, attribution, experiment backlogs, or growth-system planning. Do not use for generic brand copy, standalone reporting without a growth decision, or routine sales-stack administration alone."
+description: "Diagnose, prioritize, evaluate, instrument, or operate a measurable product or GTM growth intervention or decision: activation, retention, conversion, acquisition mechanisms, referral or growth loops, attribution, experimentation, or growth infrastructure. Use when a growth outcome or decision is central. Do not use for ordinary product or UX implementation merely because it could affect retention, generic copywriting, standalone reporting without a decision, routine CRM administration, or core-product work without a growth decision."
 ---
 
 # Growth Engineer
 
-Growth engineers use code and technical systems to remove growth bottlenecks, often carrying an opportunity through **insight → code → experiment → measurement**. The role is deliberately connective: it combines engineering, product judgment, design/UX, analytics, and distribution knowledge without replacing the teams that own those disciplines. Some growth engineers sit in product/engineering and others sit close to GTM; determine the local mandate instead of assuming a universal org chart or excluding core-product work by definition.
+Use this skill to connect **evidence → constraint → smallest intervention → measurement → decision**. Growth engineering can touch product, data, distribution, lifecycle, or GTM systems, but the request must contain a growth mechanism or decision—not just a feature that might eventually affect a metric.
 
-Treat growth as product, data, distribution, and operating-systems work. Inspect the actual product, repository, analytics, dashboards, experiment history, customer conversations, support feedback, and business constraints that are available. Record each artifact's freshness and access limits. Request only missing evidence that could change the decision; otherwise proceed with explicit bounded assumptions and do not claim a verified baseline.
+## Trigger boundary
 
-Analysis and planning are allowed with available evidence. Confirm authorization before changing code or configuration, collecting new production data, spending money, contacting or exposing customers, or launching an experiment.
+Trigger when the user asks to diagnose, prioritize, evaluate, instrument, roll out, or operate a measurable growth outcome or mechanism, such as activation, retention, conversion, acquisition quality, referral, attribution, experimentation, lifecycle automation, or a growth loop.
 
-## 1. Frame the assignment
+Do not reframe an ordinary feature, UX, accessibility, copy, CRM, or core-product implementation as growth work solely because it might influence retention or conversion. If a growth decision is not central, let the relevant implementation, writing, analytics, or CRM workflow handle it.
 
-Ask only the questions needed to proceed; record unknowns as assumptions.
+## Evidence and authority
 
-- Clarify the business model, target segment, product maturity, current constraint, decision owner, time/budget, and north-star outcome.
-- Define the role boundary: product growth (activation, retention, referral, conversion), marketing engineering (campaign/attribution infrastructure), GTM/RevOps (lead/sales systems), channel engineering, or core-product work. State what the growth engineer owns, advises on, and hands off.
-- Treat representative work as a menu, not a checklist: technical demos, onboarding or conversion flows, referral mechanisms, lifecycle systems, channel experiments, GTM workflow automation, SEO/AEO or DevRel tooling, analytics, experimentation infrastructure, and small growth prototypes.
-- A growth portfolio may span several business outcomes. For each quantitative decision or experiment, name one primary decision metric and define its numerator/denominator, unit (user, account, order), cohort/window, and source of truth; add diagnostic and guardrail metrics. For qualitative, prototype, or instrumentation work, name one primary evidence question and the outcome that would change the decision. Check downstream customer and business outcomes before optimizing a proxy.
-- Check whether traffic, retention, data quality, product value, operational capacity, or execution capacity makes the proposed test infeasible. Repair the binding constraint or use descriptive/qualitative learning instead of pretending to run an experiment.
-- Include direct customer evidence when available: observe demos, onboarding, support interactions, or user research to find friction. Label anecdotes as qualitative evidence, not proof, and respect consent and customer-facing ownership.
+1. Inspect the artifacts actually available: product or repository, analytics, dashboards, experiment history, customer conversations, support feedback, and business constraints. Record freshness and access limits.
+2. Label statements as **verified**, **likely**, **hypothesis**, **assumption**, **proposed**, or **unknown**. Do not turn timing correlation into causation.
+3. Missing data is not a reason to invent a baseline. Write `unknown — <artifact or access needed>` and give the smallest low-risk check that could change the decision.
+4. Confirm authorization before changing production code/configuration, collecting new production data, spending money, contacting customers, exposing an audience, or launching an experiment. A direct request to implement a local change is implementation authorization; external exposure still needs its normal approval gates.
 
-## 2. Establish the operating model
+## Metric and decision discipline
 
-Growth velocity depends on ownership, staffing, and architecture—not only a backlog of ideas.
+For a quantitative decision, fully define **one primary decision metric** using these exact labels: `Primary metric: <definition>; source of truth: <source or unknown>; cohort/window: <value or unknown>; evidence status: <verified/unknown/proposed>`. Fully define any diagnostic or guardrail that can trigger launch, pause, rollback, or ship using: `Guardrail: <metric>; definition/unit: <value>; source of truth: <source or unknown>; cohort/window: <value or unknown>; evidence status: <verified/unknown/proposed>; trigger/action/responder: <value or unassigned>`. Do not emit a bare guardrail name. For secondary diagnostics, state their purpose and mark missing source/window details as unknown rather than expanding every mention into a metric contract.
 
-Map each major bet to its product surface or channel, required skills, available capacity, dependencies, and ownership. Use distinct roles:
+For qualitative, prototype, or instrumentation work, name one primary evidence question and the outcome that would change the decision. Check downstream customer and business outcomes before optimizing a proxy.
 
-- **Decision owner:** chooses the bet and acts on the result.
-- **Implementation owner:** ships and maintains the change during the test.
-- **Measurement owner:** validates definitions, data, and analysis.
-- **Rollback responder:** can pause or revert exposure.
-- **Privacy/legal/security approver:** reviews the change when risk requires it.
-- **Durable owner:** owns a winner after experimentation.
+Do not choose sample sizes, time windows, rollout percentages, thresholds, owners, dates, baselines, lift, p-values, or confidence values unless they are:
 
-If an owner is unknown, write `unassigned` and name the required role or team; never invent a person. Identify staffing gaps across engineering, PM, design, data science/analytics, and relevant GTM functions. Choose team topology and tooling for the company's stage and maturity; do not import enterprise process or infrastructure into a 0→1 problem without a demonstrated need.
+- supplied by the user or an inspected artifact;
+- mechanically derived from supplied facts (show the derivation); or
+- explicitly marked `proposed — confirm with <decision owner>`.
 
-Make ideation engineer-inclusive. Invite implementers to contribute mechanisms, feasibility constraints, and architecture options before prioritization; keep backlog visibility, decision rights, and rejection rationale explicit. The growth engineer is a partner and connector, not an automatic owner of marketing, sales, product, or every landing-page task.
+If ownership is unknown, write `unassigned — <required role>`. For any planning output, begin with `Plan status: proposed — confirm with <decision owner>`. This scope label applies to every unexecuted design choice unless a line explicitly says verified, observed, or unknown. Every recommended role, cadence, staffing allocation, sample size, rollout step, threshold, or date must still be prefixed on that same line with `proposed — confirm with <decision owner>`, or remain `unknown`. Never present a recommendation as an observed result.
 
-Use a recurring operating loop when sustained growth work is in scope:
+## Operating workflow
 
-```text
-collect evidence → choose a constraint → build the thinnest useful slice → expose safely
-→ measure and interpret → share the learning → scale, iterate, hand off, or remove
-```
+### 1. Frame the decision
 
-Optimize this loop for decision quality and learning latency, not experiment count. Classify work early as a disposable prototype, reversible experiment, or likely durable path; state acceptable debt, non-negotiable quality, review threshold, and cleanup owner/date.
+State the business model/segment when known, product maturity, current constraint, decision owner, and north-star outcome. Define what the growth engineer owns, advises on, and hands off. Check whether traffic, retention, data quality, product value, operational capacity, or execution capacity makes the proposed test infeasible.
 
-## 3. Diagnose the system
+Choose one binding constraint. Use a funnel only for a sequential conversion question; use a growth loop only when an output reliably creates new input. Do not call a one-time campaign a loop.
 
-Adapt the lifecycle to the product and business model; do not force irrelevant stages. A typical map is acquisition → signup → activation/time-to-value → conversion → retention → expansion → referral. For each relevant transition, show volume, rate, definition, data source, time window, and known limitations. Compare like cohorts and periods and explain denominator changes. Report unavailable values as `unknown — <artifact/access needed>` rather than filling them in.
+### 2. Choose the lightest useful mode
 
-Use a **funnel** only for a sequential conversion question. Use a **growth loop** only when an output reliably creates new input. They are complementary, but either may be inapplicable.
+- **Randomized experiment:** use only when assignment, exposure, outcome timing, analysis unit, and a credible counterfactual are feasible.
+- **Staged rollout or quasi-experimental comparison:** define gates, comparison basis, guardrails, limitations, and rollback; do not claim causality when time or selection confounds remain.
+- **Descriptive, qualitative, prototype, or instrumentation learning:** use when the evidence question matters but a credible counterfactual does not exist.
 
-```text
-Loop: input → value-producing user action → output/distribution or reinvestment → new input
-```
+Before using detailed experiment, instrumentation, operating-model, or loop guidance, read only the relevant reference:
 
-For each plausible loop (referral, user-generated content, paid reinvestment, sales capacity, repeat engagement), state its input, trigger, output, conversion, delay, cost/cap, retention dependency, and breakpoints. Do not call a one-time campaign a loop. Treat retention as a multiplier because retained customers can generate more referrals, content, usage, or revenue.
+- `references/experiment-and-rollout.md`
+- `references/instrumentation-audit.md`
+- `references/operating-model.md`
+- `references/growth-loops.md`
 
-### Audit measurement and growth infrastructure
+Do not read all references by default.
 
-Trace a representative user/account from exposure through the primary outcome. Check:
+### 3. Map and prioritize
 
-- metric definitions, timezone, cohort/window, identity stitching, bots/internal traffic, backfills, and late events;
-- event taxonomy: canonical names, required properties, user/account IDs, timestamps, consent state, acquisition/UTM fields, and source of truth;
-- client/server duplication, missing events, retries, schema drift, variant/control assignment, exposure before outcome, and attribution logic;
-- reconciliation between raw events, warehouse/model, experiment analysis, and dashboard; quantify discrepancies instead of silently choosing a number;
-- access controls, retention, consent, and deletion requirements before adding tracking or targeting;
-- growth-tech architecture: analytics pipeline, landing-page or component system, feature flags and full-stack experimentation, analysis tooling, martech integrations, pixels/ad-partner destinations, failure modes, ownership, and build-vs-buy constraints.
+Separate evidence from ideas. Rank opportunities by evidence strength, customer/business impact, reach, confidence, effort, reversibility, risk, and dependencies; keep confidence separate from impact. Binding constraints, customer trust, privacy, safety, and reliability outrank a high aggregate score.
 
-Audit only layers relevant to the decision. Infrastructure should improve speed **and** trustworthiness; do not install a full stack merely because it appears in a reference architecture. Label findings **verified**, **likely**, **hypothesis**, or **unknown**. For each material gap, propose the smallest fix, an owner, and a validation query or check.
+### 4. Expose safely and learn
 
-## 4. Map and prioritize opportunities
+Prefer the smallest reversible implementation: a feature flag, configuration, bounded audience, capped budget, or staged rollout with a tested kill/rollback path. Validate exposure and event integrity before interpreting outcomes. Protect authentication, validation, accessibility, privacy, security, reliability, margins, and support capacity. Pause on material harm, privacy/security issues, guardrail breaches, or unbounded spend.
 
-Create opportunities from observed friction, segment differences, direct customer evidence, support/sales feedback, product behavior, technical bottlenecks, capacity gaps, and loop breakpoints. Separate evidence from idea and invite engineering, product, design, data, and relevant GTM partners to contribute mechanisms.
+### 5. Decide and hand off
 
-Rank opportunities by evidence strength, customer/business impact, reach, strategic fit, confidence, effort, reversibility, risk, and dependencies. Use ordinal scores only when useful and include one evidence sentence per score. Keep evidence strength/confidence separate from impact; do not calculate a composite unless requested. Binding constraints and safety outrank a high aggregate score. Include measurement/platform or retention work when either is the bottleneck.
-
-## 5. Choose an evaluation mode and write the plan
-
-Choose the lightest evaluation mode that can change the decision:
-
-- **Randomized experiment:** define assignment and analysis unit, eligibility, exposure, estimand, minimum practical effect or success threshold, analysis plan, observation window, contamination risks, and stopping rules.
-- **Staged rollout or quasi-experimental comparison:** define rollout gates, comparison basis, guardrail thresholds, and limitations. Do not claim causality unless the design supports it.
-- **Descriptive, qualitative, prototype, or instrumentation learning:** define the evidence to collect and what decision it will inform. Do not force an experiment card when there is no credible counterfactual.
-
-Use this card for an experiment or tracked rollout; omit inapplicable fields only with a reason:
-
-```markdown
-### Experiment / rollout: <name>
-- Decision / decision owner / decision date:
-- Problem and segment; supporting evidence and quality:
-- Hypothesis: If <change> for <audience>, then <primary outcome> will <direction>, because <mechanism>.
-- Lifecycle stage / funnel step / loop or distribution mechanism:
-- Evaluation mode and why; comparison/counterfactual:
-- Primary metric: <exact definition, source, unit, window>; diagnostic metrics:
-- Estimand / analysis unit / analysis plan; minimum practical effect or success threshold:
-- Guardrails: <metric, unit/window, threshold, action, responder>:
-- Design: eligibility, randomization/bucketing or rollout logic, exposure event, exclusions, and contamination risks:
-- Decision rule: ship / iterate / stop / collect data; inconclusive rule; planned observation window and why:
-- Implementation: flag/config, owner, dependencies, acceptable debt, rollback/kill switch, support path, spend cap:
-- QA and monitoring: checks, dashboard/alert, cadence, responder:
-- Result: observed effect + uncertainty/limitations; segments and downstream outcomes:
-- Decision and rationale; owner, follow-up, cleanup or handoff:
-```
-
-Do not invent sample sizes, baselines, lift, dates, p-values, or confidence. Select analysis appropriate to the design and data, check assumptions and data quality, report uncertainty, and use the predeclared decision rule.
-
-## 6. Build, launch, and learn safely
-
-1. Prefer the smallest reversible implementation that can answer the question: feature flag, configuration, bounded audience, capped budget, or staged rollout. Keep a tested rollback/kill path.
-2. Make temporary code safe and observable. Speed may change how much is built, not whether auth, validation, accessibility, privacy, security, reliability limits, and material customer risks are addressed.
-3. Before exposure, complete this launch checklist:
-   - [ ] Plan approved; primary/guardrail definitions, evaluation mode, and decision rule are unambiguous.
-   - [ ] Required consent, privacy, legal/policy, fairness, customer-support, security, and spend reviews are complete.
-   - [ ] Flag, eligibility, assignment, rollback, owners, and escalation path work.
-   - [ ] Events fire once with correct IDs/properties; exposure precedes outcome; analysis data reconciles.
-   - [ ] Happy path, failure path, mobile/accessibility, performance, and payment/communication effects are checked as relevant.
-   - [ ] Monitoring, alerts, budget caps, launch/stop windows, and responders are live.
-4. During launch, verify actual exposure and event volume before interpreting outcomes. Pause or roll back on a breached guardrail, material customer harm, privacy/security issue, or unbounded spend; notify the decision owner.
-5. Analyze against the declared comparison. Inspect data quality, segments, novelty/timing effects, downstream retention/revenue/cost, and unintended effects. Report null and ambiguous results as learning, not failure.
-
-## 7. Decide, scale, and hand off
-
-Ship only when evidence, guardrails, and operational readiness support it. Iterate when the mechanism remains plausible but the evaluation was underpowered, contaminated, or implementation-limited. Stop when evidence weakens the hypothesis, harms customers, or fails the economics or risk bar. Collect more data only when named evidence can resolve the uncertainty.
-
-For every outcome—ship, iterate, stop, collect data, or blocked—record the owner, artifact location, next review date, open risks, and cleanup date for flags, events, integrations, and temporary code. For a durable winner, replace test scaffolding with production-quality ownership: requirements, code review/tests, stable metrics, monitoring, runbook, privacy/data-retention review, support/sales/marketing enablement, and a named durable owner. Keep the flag until rollout is stable, then remove obsolete flags, events, and code on the assigned date.
-
-Share the mechanism, metric definitions, constraints, rollout plan, and decision rights with relevant product, engineering, design, data, marketing, sales/RevOps, support, finance, and legal/privacy partners—not just a request ticket.
+Use an explicit decision rule: **ship, iterate, stop, collect evidence, or blocked**. Report uncertainty, null results, contamination, and downstream effects. For a winner, name the durable owner and production-quality handoff. For temporary flags, events, integrations, or code, name a cleanup owner/date only when supplied or explicitly proposed.
 
 ## Output contract
 
-Choose the output that matches the request; do not emit empty funnel, loop, or experiment sections.
+Choose only the output mode that fits the request; omit empty or irrelevant sections.
 
-- **Diagnosis:** context/boundaries, artifact and evidence status, metric/lifecycle view where relevant, binding constraint, ranked opportunities, and next decision.
-- **Experiment or rollout:** completed card, launch/analysis plan, owners, rollback, and handoff/cleanup.
-- **Implementation or instrumentation:** change scope, evidence, QA/tests, monitoring, rollback, ownership, and remaining risks.
-- **Operating-model review:** bets/surfaces, team and capacity map, ownership gaps, infrastructure/process constraints, and recommended cadence.
-- **Blocked:** blocker and evidence, work completed, lowest-risk next step, and the exact owner decision or access required.
+- **Diagnosis:** context/boundary, artifact and evidence status, binding constraint, relevant metric/lifecycle view, ranked opportunities, and next decision.
+- **Experiment or rollout:** hypothesis, evaluation mode, primary metric, decision-triggering guardrails, assignment/exposure, analysis limits, rollback, owners, and decision rule. Read `references/experiment-and-rollout.md`.
+- **Implementation or instrumentation:** scope, evidence, event/attribution contract, QA, monitoring, rollback, ownership, and remaining risks. Read `references/instrumentation-audit.md` when auditing measurement.
+- **Operating-model review:** bets/surfaces, capacity, ownership gaps, constraints, and cadence. Read `references/operating-model.md`.
+- **Loop analysis:** input, value-producing action, output/reinvestment, new input, delay/cost/cap, retention dependency, breakpoint, and validation. Read `references/growth-loops.md`.
+- **Blocked:** blocker and evidence, work completed, lowest-risk next step, and exact owner/access decision required.
 
-For a ranked opportunity table, prefer:
+For each quantitative output, verify the primary metric and every action-triggering guardrail with the exact labeled forms above, including a literal `evidence status:` field. Do not emit a bare guardrail list. For all outputs, verify that causal language matches the design, every recommended role/cadence/value is labeled on its own line or covered by the plan-status scope label, and no unsupported owner/date/baseline/statistic was presented as fact.
 
-```markdown
-| Rank | Opportunity | Evidence and confidence | Expected mechanism | Risk/dependency | Validation next step | Owner/decision |
-```
+## Guardrails
 
-Append to an existing learning log when available. Otherwise include a structured entry only when useful: date, hypothesis or decision, implementation/evidence, exposure/data-quality status, observed outcome and uncertainty, decision, owner, and reusable insight. Do not imply durable persistence when no log was updated.
-
-## Guardrails and anti-patterns
-
-- Do not use dark patterns, deceptive scarcity, undisclosed fake doors, bait-and-switch offers, discriminatory targeting, or coercive notifications. Avoid worsening a customer experience merely to measure demand.
-- Minimize data and obtain required consent. Do not expose sensitive data in analytics, URLs, logs, experiments, or partner integrations. Escalate legal/privacy/security questions rather than guessing.
-- Protect customer trust, accessibility, reliability, margins, and brand alongside the primary metric. Every guardrail must specify metric, unit/window, threshold, action, and responder.
-- Avoid optimizing acquisition while ignoring activation/retention, mistaking one-off campaigns for loops, building permanent platforms before validating need, or optimizing throughput over useful learning.
-- Do not trust a dashboard blindly, cherry-pick segments/windows, confuse correlation with causation, run overlapping/confounded tests without disclosure, or bury a negative result.
-- If required context, data access, consent authority, production authorization, or a safe rollback is absent, state the limitation and propose a low-risk next step. Do not fabricate evidence or silently expand scope.
-
-Before responding, verify that every metric claim has a definition/source/window and evidence status; no owners, dates, baselines, or statistical values were invented; causal language matches the evaluation design; unexecuted actions are labeled as proposed; and the output mode fits the request.
-
-For source provenance and the practitioner perspectives behind the role examples, see [references/provenance.md](references/provenance.md). Treat those sources as context, not universal org-design rules.
+- Do not use dark patterns, deceptive scarcity, bait-and-switch offers, discriminatory targeting, coercive notifications, or customer-harming fake doors.
+- Minimize data and obtain required consent. Never place sensitive data in URLs, logs, analytics, experiments, or partner integrations.
+- Protect accessibility, reliability, customer trust, margins, and support capacity alongside the primary outcome.
+- Do not optimize acquisition while ignoring activation/retention, trust a dashboard blindly, cherry-pick windows/segments, confuse correlation with causation, or build a permanent platform before validating need.
+- If required context, data access, consent authority, production authorization, or rollback safety is absent, state the limitation and propose a low-risk next step. Do not silently expand scope.

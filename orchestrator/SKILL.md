@@ -11,14 +11,15 @@ tests, logs, and supporting research into isolated subagent contexts.
 
 ## Architecture
 
-Use this topology for every delegated workflow:
+Use this topology for every delegated workflow that is large enough to justify
+delegation:
 
 ```mermaid
 flowchart LR
     user["user task"] --> sol["Sol orchestrator<br/>plan · delegate · synthesize"]
-    sol -->|"fan out"| w1["worker 1<br/>Terra or Luna"]
-    sol -->|"fan out"| w2["worker 2<br/>Terra or Luna"]
-    sol -->|"fan out"| w3["worker 3<br/>Terra or Luna"]
+    sol -->|"fan out"| w1["worker 1<br/>Luna"]
+    sol -->|"fan out"| w2["worker 2<br/>Luna"]
+    sol -->|"fan out"| w3["worker 3<br/>Luna"]
     w1 -->|"distilled report"| sol
     w2 -->|"distilled report"| sol
     w3 -->|"distilled report"| sol
@@ -28,8 +29,9 @@ flowchart LR
     sol --> answer["verified synthesis"]
 ```
 
-The primary agent is the Sol orchestrator. Workers are bounded, do not spawn
-recursively, and return evidence rather than raw transcripts.
+The intended topology is one Sol primary orchestrator and exactly three
+independent workers. Workers are bounded, do not spawn recursively, and return
+structured evidence rather than raw transcripts.
 
 ## Model and execution routes
 
@@ -37,19 +39,20 @@ recursively, and return evidence rather than raw transcripts.
 
 - Primary orchestrator: `gpt-5.6-sol` with `xhigh` reasoning.
 - Preferred exact worker model: `gpt-5.6-luna` with `xhigh` reasoning.
-- Visible native fallback worker: `gpt-5.6-terra` with `xhigh` reasoning when the
-  native router does not accept Luna.
-- Run no more than four workers concurrently.
+- Visible native fallback worker: `gpt-5.6-terra` with `xhigh` reasoning only
+  when sidebar visibility is requested and native Luna is rejected.
+- Run exactly three workers concurrently for a delegated workflow.
 
-The skill cannot change the model of an already-running primary task. Treat the
-model contract as the required setting for the next orchestrated task and state
-the actual model when the host cannot honor it.
+The skill cannot change the model of an already-running primary task. Launch the
+next orchestrated task with `gpt-5.6-sol`/`xhigh`, and state the actual primary
+model when the host cannot honor that contract. Do not claim that the current
+task is Sol merely because this skill was loaded.
 
 ### Route selection
 
 1. If the user asks to see live activity, sidebar workers, or a sub-agent
    section, use **Sidebar-visible native mode**.
-2. Otherwise use **Luna CLI mode** when exact Luna xhigh execution is valuable.
+2. Otherwise use **Luna CLI mode** to guarantee exact Luna/xhigh workers.
 3. Never claim that CLI workers are visible in the sidebar, and never label a
    Terra fallback as Luna.
 
@@ -69,21 +72,22 @@ and tool activity in the app's sub-agent section.
 
 ### Luna CLI mode
 
-Use the bundled `scripts/run-luna-workers.mjs` runner when exact Luna xhigh
+Use the bundled `scripts/run-luna-workers.mjs` runner when exact Luna/xhigh
 execution is required or the user did not request sidebar visibility. The
-runner launches detached `codex exec` processes, pins workers to
-`gpt-5.6-luna`/`xhigh`, disables recursive agents, and returns one aggregate
-JSON result. This route is not sidebar-visible.
+runner launches separate `codex exec` processes, pins workers to
+`gpt-5.6-luna`/`xhigh`, disables recursive agents, validates a structured report,
+and returns one aggregate JSON result. This route is not sidebar-visible.
 
+- The runner is a control-plane process: it creates ephemeral temp files and
+  optional trace artifacts. Run the control plane with a sandbox that permits
+  those files, while keeping each read-only worker at `--sandbox read-only`.
+  Never describe this as zero-write execution. Codex CLI also needs an
+  authenticated writable runtime home for state; pass `--codex-home` when the
+  default home is not writable. Repository access remains read-only.
 - Use `read-only` for exploration, review, research, logs, and test inspection.
-  Use `workspace-write` only for implementation tasks with disjoint ownership.
+  Use `workspace-write` only for implementation tasks with disjoint ownership
+  and explicit authorization.
 - Run dependent or overlapping tasks in separate sequential runner invocations.
-- Bound each CLI invocation with a host-level timeout and monitor the runner and
-  child processes. If it exceeds the timeout, terminate it and classify the
-  affected workers as incomplete; do not synthesize missing reports.
-- On a timeout or failed aggregate result, retry once with fewer workers or use
-  the documented native Terra fallback when exact Luna execution is unavailable.
-  Report the actual route, model, failed worker IDs, and remaining evidence gap.
 
 ## Worker Spec
 
@@ -93,58 +97,65 @@ Write a temporary JSON spec outside committed project files:
 {
   "tasks": [
     {
-      "id": "tests",
-      "prompt": "Inspect the test suite for important coverage gaps. Return evidence and risks.",
+      "id": "surface-a",
+      "prompt": "Inspect surface A. Return only the required structured report.",
       "sandbox": "read-only"
     },
     {
-      "id": "implementation",
-      "prompt": "Implement the assigned change only in src/component-a. Run focused verification.",
-      "sandbox": "workspace-write"
+      "id": "surface-b",
+      "prompt": "Inspect surface B. Return only the required structured report.",
+      "sandbox": "read-only"
+    },
+    {
+      "id": "surface-c",
+      "prompt": "Inspect surface C. Return only the required structured report.",
+      "sandbox": "read-only"
     }
   ]
 }
 ```
 
-Give write workers disjoint files or components. Include all task-local context,
-success criteria, evidence requirements, and scope boundaries in each prompt.
-Require each worker's final message to name findings or changes, files inspected
-or modified, commands/tests run, evidence, and remaining risks.
+Create exactly three meaningful, independent slices; never add filler work just
+to reach the count. Give write workers disjoint files or components. Include all
+task-local context, success criteria, evidence requirements, and scope boundaries
+in each prompt. Each worker must return JSON with `status`, `summary`, `files`,
+`verification`, and `risks` fields.
 
 Run the workers from the target repository directory:
 
 ```bash
-node /absolute/path/to/orchestrator/scripts/run-luna-workers.mjs \
+node "${CODEX_HOME:-$HOME/.codex}/skills/orchestrator/scripts/run-luna-workers.mjs" \
   --spec /absolute/path/to/tasks.json \
   --cwd /absolute/path/to/repository \
-  --max-concurrency 4
+  --max-concurrency 3 \
+  --trace-dir /absolute/path/to/temporary/traces \
+  --codex-home /absolute/path/to/authenticated/writable/codex-home
 ```
 
 The command requires network access for Codex model calls. If the sandbox blocks
-the request, retry it through the normal scoped approval flow. Parse the returned
-JSON and treat any `ok: false` result as a failed worker, not as partial success.
+the control-plane temp directory, change the control-plane sandbox rather than
+silently claiming success. Parse the returned JSON and treat any `ok: false`
+result, malformed worker report, or timeout as a failed worker. When
+`--trace-dir` is supplied, a missing trace is also a failure.
 
 ## Workflow
 
 1. Assess whether delegation is worthwhile. Continue in the primary thread when
-   the task is small, sequential, or likely to cost more coordination than it
-   saves.
-2. Decompose larger work into concrete tasks with clear scope, dependencies,
-   ownership, expected evidence, and completion criteria.
+   the task is small, sequential, or cannot be divided into three meaningful
+   independent slices.
+2. Decompose larger work into exactly three concrete tasks with clear scope,
+   dependencies, ownership, expected evidence, and completion criteria.
 3. Select Sidebar-visible native mode when the user asks to watch activity;
-   otherwise select Luna CLI mode when exact Luna execution is needed.
-4. Launch the selected workers in parallel only when tasks are independent and
-   use no more than four concurrent workers.
-5. Give each worker only the context it needs. Require a distilled result:
-   findings or changes, files inspected or modified, commands/tests run,
-   evidence, and remaining risks. Do not request raw logs or large file dumps.
-6. Wait for every required worker. Inspect each result, reconcile
-   contradictions, verify important claims, and run any final integration
-   checks needed before answering.
+   otherwise select Luna CLI mode for exact Luna/xhigh execution.
+4. Launch all three selected workers in parallel. Do not silently reduce the
+   count or add filler tasks.
+5. Give each worker only the context it needs and require the structured report.
+6. Wait for all three workers. Inspect every report and trace, reconcile
+   contradictions, verify important claims, and run final integration checks.
 
 ## Coordination Rules
 
-- Parallelize read-heavy work when tasks are independent.
+- Parallelize exactly three read-heavy tasks when they are independent.
 - Give parallel write workers disjoint files or components.
 - Run dependent or overlapping write tasks sequentially through follow-up
   delegations.
@@ -154,7 +165,7 @@ JSON and treat any `ok: false` result as a failed worker, not as partial success
 - Do not let workers broaden scope or perform unrelated external actions.
 - Reuse worker evidence instead of repeating repository-wide scans in the
   primary thread.
-- Stop spawning workers once additional delegation would not improve latency,
-  quality, context isolation, or expensive-model usage.
+- Stop before delegation when three meaningful independent tasks do not exist;
+  do not manufacture work to satisfy the topology.
 - Report one verified synthesis to the user, not a transcript of worker
   activity.
