@@ -9,7 +9,7 @@ One JSON object drives both renderers:
 
 ```ts
 {
-  title: string;            // the topic, e.g. "How HTTPS works". Page title becomes "Flashcards & Mind Map: <title>".
+  title: string;            // the topic, e.g. "How HTTPS works". Page title becomes "Mind Map: <title>".
                             // Also the root box text on phones (keep it under ~26 chars).
   subtitle?: string;        // one sentence: what this covers and where it came from
                             // ("From lecture slides 1-5." / "Written from general knowledge, not from a source.")
@@ -25,19 +25,10 @@ One JSON object drives both renderers:
     }>;
     hook: string;           // LAST leaf, red + underlined: compressed memory hook, "a · b · c"
   }>;
-  flashcards: Array<{
-    deck: string;           // a branch id (or label); unknown names become extra decks at the end
-    front: string;          // question or term; prefix "★ " for likely-exam / most important
-    back: string | string[];// answer; a string is split into lines on " | "
-  }>;
 }
 ```
 
-Rules the renderers apply for you (do not write these by hand):
-
-- Each branch renders as `anchor`, then every leaf, then `hook`. The folded count is leaves + 2.
-- Each deck whose name matches a branch gets one automatic last card, `Memory hook: <label>`, whose back is the anchor and the hook.
-- Decks follow branch order. Cards keep their order inside each deck.
+The renderer draws each branch as `anchor`, then every leaf, then `hook`, so the folded count is leaves + 2. Any other keys are ignored. `build_html.py` warns about a stray `flashcards` key and drops it.
 
 ## Example (trimmed)
 
@@ -58,10 +49,6 @@ Rules the renderers apply for you (do not write these by hand):
       ],
       "hook": "hello · cert · keys · finished"
     }
-  ],
-  "flashcards": [
-    { "deck": "tls", "front": "★ What does the ClientHello carry?", "back": "Versions and cipher suites | A key share | SNI hostname" },
-    { "deck": "tls", "front": "Round trips in a TLS 1.3 handshake?", "back": "One (1-RTT)." }
   ]
 }
 ```

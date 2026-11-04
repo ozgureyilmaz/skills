@@ -50,17 +50,6 @@ def validate(d):
                 errs.append("%s.leaves[%d].label: required string" % (p, j))
             elif "value" in l and not isinstance(l["value"], str):
                 errs.append("%s.leaves[%d].value: must be a string" % (p, j))
-    fc = d.get("flashcards", [])
-    if not isinstance(fc, list):
-        errs.append("flashcards: must be a list")
-        fc = []
-    for i, c in enumerate(fc):
-        p = "flashcards[%d]" % i
-        if not isinstance(c.get("deck"), str) or not isinstance(c.get("front"), str):
-            errs.append("%s: deck and front must be strings" % p)
-        bk = c.get("back")
-        if not (isinstance(bk, str) or (isinstance(bk, list) and all(isinstance(x, str) for x in bk))):
-            errs.append("%s.back: string or list of strings" % p)
     return errs
 
 
@@ -93,7 +82,7 @@ def build(data, template):
     pre, rest = template.split(START, 1)
     _, post = rest.split(END, 1)
     title = re.sub(r"[<&>]", "", data["title"])
-    pre = re.sub(r"<title>.*?</title>", "<title>Flashcards &amp; Mind Map: " + title + "</title>", pre, count=1)
+    pre = re.sub(r"<title>.*?</title>", "<title>Mind Map: " + title + "</title>", pre, count=1)
     return pre + START + blob + END + post
 
 
@@ -108,6 +97,11 @@ def main(argv):
             data = json.load(f)
     except (OSError, ValueError) as e:
         fail("cannot read %s: %s" % (src, e))
+    if isinstance(data, dict) and "flashcards" in data:
+        sys.stderr.write("warning: ignoring 'flashcards' key (this skill renders only the mind map)\n")
+        data.pop("flashcards")
+    if not isinstance(data, dict):
+        fail("data must be a JSON object")
     errs = validate(data)
     if errs:
         fail("invalid data:\n  " + "\n  ".join(errs))

@@ -1,11 +1,11 @@
 ---
 name: mindmap
-description: Turn any complex topic into a collapsible-tree mind map plus companion flashcards, in one fixed look (root box, foldable branch boxes, short "Label: value" leaves, red-underlined source anchor first and memory hook last, Expand all / Collapse all, vertical tree on phones, light and dark). Use when the user wants to understand, study or revise a topic, a course, lecture slides, a paper, a book chapter, a codebase concept or any document set, or asks for a mind map, flashcards, a study map, a concept map or "help me remember this". Renders as a Grok Bot Page (canvas) or, in any other agent (Claude Code, Codex, Cursor, etc.), as one self-contained HTML file.
+description: Turn any complex topic into a collapsible-tree mind map, in one fixed look (root box, foldable branch boxes, short "Label: value" leaves, red-underlined source anchor first and memory hook last, Expand all / Collapse all, vertical tree on phones, light and dark). Use when the user wants to understand, study or revise a topic, a course, lecture slides, a paper, a book chapter, a codebase concept or any document set, or asks for a mind map, a study map, a concept map or "help me see how this fits together". Renders as a Grok Bot Page (canvas) or, in any other agent (Claude Code, Codex, Cursor, etc.), as one self-contained HTML file.
 ---
 
-# Mind map + flashcards
+# Mind map
 
-Produce the same output every time: a collapsible tree mind map and a flashcard deck built from one JSON dataset. Only the data changes between topics; never restyle the renderers.
+Produce the same output every time: one collapsible tree mind map built from one JSON dataset. Only the data changes between topics; never restyle the renderers. The output is the mind map only, so don't add flashcards, quizzes or notes unless the user asks for them separately.
 
 Files in this skill:
 
@@ -37,22 +37,15 @@ Files in this skill:
   - When working from a source, never add facts that aren't in it. If you add context, mark it ("(general note) ...").
   - Use no filler, no full sentences, and don't repeat the branch label.
 
-### 3. Write the flashcards from the same data
-
-- Cover every leaf, plus the definitions, lists, sequences, comparisons ("X vs Y") and "who / when" facts behind it. Aim for 3-12 cards per branch.
-- `deck` is the branch `id`. Prefix the most important or likely-exam cards with `★ `.
-- Keep backs short. Use ` | ` to split one answer into lines.
-- Don't write the memory-hook card. The renderer adds one per deck from `anchor` + `hook`.
-
 Save the dataset as `<topic-slug>.mindmap.json` (schema: `references/data-schema.md`).
 
-### 4. Render
+### 3. Render
 
 **A. In Grok Bot (or any host with `WriteCanvas`)**: write a Page.
 
 1. Read `references/grokbot-canvas-template.canvas.tsx`.
 2. Replace the object after `const DATA: MindMapData =` (between the `DATA` banner and `END DATA`) with your JSON. JSON is valid TypeScript here. Don't touch anything else.
-3. Call `WriteCanvas` with the full source and the title `Flashcards & Mind Map: <title>`. If it reports a type error, fix it with `EditCanvas` (usually a stray quote or a wrong field type in the data).
+3. Call `WriteCanvas` with the full source and the title `Mind Map: <title>`. If it reports a type error, fix it with `EditCanvas` (usually a stray quote or a wrong field type in the data).
 4. Send the user the `url` the tool returned as a markdown link. Pages start private, and the user publishes one with the share button on the Page.
 
 **B. In any other agent (Claude Code, Codex, Cursor, Gemini CLI, etc.)**: write one HTML file.
@@ -60,25 +53,23 @@ Save the dataset as `<topic-slug>.mindmap.json` (schema: `references/data-schema
 1. Save the JSON, then run:
    `python3 <skill-dir>/scripts/build_html.py <topic-slug>.mindmap.json <topic-slug>-mindmap.html`
    This validates the data, prints warnings for over-long labels or branch counts outside 4-8, and writes the HTML. With no Python, copy `references/standalone-template.html` and replace the JSON between `/*DATA_START*/` and `/*DATA_END*/` yourself (write `</` inside strings as `<\/`).
-2. The file is fully self-contained, with no network, fonts or CDNs. Open it directly (`open file.html`, `xdg-open`, or `python3 -m http.server`). The "Mind map" tab opens first, and `#flashcards` in the URL opens the flashcards.
+2. The file is fully self-contained, with no network, fonts or CDNs. Open it directly (`open file.html`, `xdg-open`, or `python3 -m http.server`).
 3. Tell the user the file path. If you can, take a headless screenshot (`chrome --headless=new --screenshot=out.png --window-size=800,1250 file://...`) and look at it before you report.
 
-### 5. Quality checklist (check before you deliver)
+### 4. Quality checklist (check before you deliver)
 
 - [ ] 4-8 branches, and each has 3-8 middle leaves plus an anchor and a hook.
 - [ ] Every anchor is a real source, author, year or key definition, and every hook is a short ` · ` sequence taken from its branch.
 - [ ] No leaf is longer than about 40 characters and no branch label is longer than 20 (`build_html.py` warns about both).
 - [ ] Facts match the source word for word on names, numbers and years. Nothing is invented, and knowledge-only content is flagged in `subtitle`.
-- [ ] Every branch has a deck with at least 3 cards, and the key cards are starred.
 - [ ] The renderer code is unchanged and only the data was replaced.
 - [ ] The Page link or HTML path is delivered. Folding a branch shows `+` and its hidden count, and Expand all / Collapse all both work.
 
 ## What the output looks like (do not change)
 
-- The intro line reads "Key facts and memory hooks. Click a branch to fold or open it." Under it are the **Expand all** and **Collapse all** buttons.
+- The page has a title (`Mind Map: <title>`), a one-line summary and the intro line "Key facts and memory hooks. Click a branch to fold or open it." Under it are the **Expand all** and **Collapse all** buttons, then the map.
 - On desktop, the root box sits on the left with a bold rounded outline and a red outer ring. Thick curved connectors run to the branch boxes, and thin connectors with dots run to the leaves.
 - Branch boxes start with `−` when open and `+` when folded, and a folded box shows the number of hidden leaves.
 - The anchor and the hook are drawn in red with a hand-drawn red underline. Every other leaf is plain ink.
 - Below 640 px the map becomes a vertical tree: the root box with a red underline, a trunk, and branches with their leaves indented underneath.
-- Flashcards have a deck picker, a "Hide cards I know" switch, a progress bar, click or Space to flip, arrow keys, Previous / Flip / Next / Shuffle, Know it / Review again, Reset marks and Original order. A card's border turns red when flipped.
 - Light and dark themes both read well. The Page follows the host theme, and the HTML follows `prefers-color-scheme`.

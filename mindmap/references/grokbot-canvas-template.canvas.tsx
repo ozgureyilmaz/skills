@@ -1,5 +1,5 @@
-import { Page, Section, Text, Button, Select, Toggle, useGrokTheme, useState, useMemo, useRef, useEffect } from "grok/canvas";
-import type { ReactNode, KeyboardEvent } from "grok/canvas";
+import { Page, Text, Button, useGrokTheme, useState, useRef, useEffect } from "grok/canvas";
+import type { ReactNode } from "grok/canvas";
 
 // =====================================================================
 // DATA: the ONLY part to replace. Paste a JSON object that follows
@@ -8,8 +8,7 @@ import type { ReactNode, KeyboardEvent } from "grok/canvas";
 // =====================================================================
 type LeafData = { label: string; value?: string };
 type BranchData = { id: string; label: string; anchor: string; leaves: LeafData[]; hook: string };
-type CardData = { deck: string; front: string; back: string | string[] };
-type MindMapData = { title: string; subtitle?: string; root?: string[]; branches: BranchData[]; flashcards: CardData[] };
+type MindMapData = { title: string; subtitle?: string; root?: string[]; branches: BranchData[] };
 
 const DATA: MindMapData = {
   "title": "How HTTPS works",
@@ -48,48 +47,12 @@ const DATA: MindMapData = {
       { "label": "Impersonation", "value": "cert check fails" },
       { "label": "Not stopped", "value": "hacked endpoint" }
     ], "hook": "read · change · pretend" }
-  ],
-  "flashcards": [
-    { "deck": "tls", "front": "★ What does the ClientHello carry?", "back": "Supported TLS versions and cipher suites | A key share for the key exchange | SNI: the hostname it wants" },
-    { "deck": "tls", "front": "How many round trips does a TLS 1.3 handshake take?", "back": "One (1-RTT); resumption can send data in 0-RTT." },
-    { "deck": "tls", "front": "What does the Finished message prove?", "back": "Both sides saw the same handshake transcript, so nothing was altered." },
-    { "deck": "crypto", "front": "★ Forward secrecy", "back": "Ephemeral keys mean a later key leak cannot decrypt past sessions." },
-    { "deck": "crypto", "front": "Asymmetric vs symmetric in HTTPS", "back": "Asymmetric: key exchange and signatures | Symmetric (AES-GCM, ChaCha20): the bulk data" },
-    { "deck": "pki", "front": "★ What does a CA do?", "back": "Signs a certificate binding a public key to a hostname." },
-    { "deck": "pki", "front": "Order of a certificate chain", "back": "Leaf → intermediate → root (root lives in the trust store)." },
-    { "deck": "http", "front": "What is SNI for?", "back": "Tells a shared server which site's certificate to present." },
-    { "deck": "http", "front": "★ HSTS", "back": "A header telling the browser to use only HTTPS for this site from now on." },
-    { "deck": "threats", "front": "★ The 3 attacks HTTPS stops", "back": "Eavesdropping | Tampering | Impersonation" },
-    { "deck": "threats", "front": "What can HTTPS NOT protect against?", "back": "A compromised client or server: data is plaintext at the endpoints." }
   ]
 };
 // ============================= END DATA ==============================
 
-type Card = { id: number; deck: string; front: string; back: string[] };
 type Leaf = { t: string; r?: boolean };
 type Branch = { id: string; label: string; leaves: Leaf[] };
-
-const deckName = (d: string): string => {
-  const b = DATA.branches.find((x: BranchData) => x.id === d || x.label === d);
-  return b ? b.label : d;
-};
-
-const DECKS: string[] = DATA.branches.map((b: BranchData) => b.label);
-DATA.flashcards.forEach((c: CardData) => {
-  const n = deckName(c.deck);
-  if (DECKS.indexOf(n) < 0) DECKS.push(n);
-});
-
-const CARDS: Card[] = [];
-DECKS.forEach((d: string) => {
-  DATA.flashcards
-    .filter((c: CardData) => deckName(c.deck) === d)
-    .forEach((c: CardData) => {
-      CARDS.push({ id: CARDS.length, deck: d, front: c.front, back: Array.isArray(c.back) ? c.back : c.back.split(" | ") });
-    });
-  const b = DATA.branches.find((x: BranchData) => x.label === d);
-  if (b) CARDS.push({ id: CARDS.length, deck: d, front: `Memory hook: ${b.label}`, back: [b.anchor, b.hook] });
-});
 
 const MAP: Branch[] = DATA.branches.map((b: BranchData) => ({
   id: b.id,
@@ -110,137 +73,6 @@ function rootLines(): string[] {
     if (diff < bestDiff) { bestDiff = diff; best = i; }
   }
   return [words.slice(0, best).join(" "), words.slice(best).join(" ")];
-}
-
-function shuffled(ids: number[]): number[] {
-  const a = ids.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const tmp = a[i];
-    a[i] = a[j];
-    a[j] = tmp;
-  }
-  return a;
-}
-
-function Flashcards() {
-  const t = useGrokTheme();
-  const ink = t.text.primary;
-  const faint = t.text.tertiary;
-  const red = t.dataviz.negative;
-
-  const [order, setOrder] = useState<number[]>(CARDS.map((c: Card) => c.id));
-  const [deck, setDeck] = useState<string>("All");
-  const [hideKnown, setHideKnown] = useState<boolean>(false);
-  const [pos, setPos] = useState<number>(0);
-  const [flipped, setFlipped] = useState<boolean>(false);
-  const [marks, setMarks] = useState<Record<number, "know" | "review">>({});
-
-  const inDeck = useMemo(() => CARDS.filter((c: Card) => deck === "All" || c.deck === deck), [deck]);
-  const list = useMemo(
-    () => order.map((id: number) => CARDS[id]).filter((c: Card) => (deck === "All" || c.deck === deck) && (!hideKnown || marks[c.id] !== "know")),
-    [order, deck, hideKnown, marks]
-  );
-  const idx = list.length === 0 ? 0 : Math.min(pos, list.length - 1);
-  const card: Card | undefined = list[idx];
-  const known = inDeck.filter((c: Card) => marks[c.id] === "know").length;
-  const review = inDeck.filter((c: Card) => marks[c.id] === "review").length;
-
-  const go = (d: number) => {
-    if (list.length === 0) return;
-    setPos((idx + d + list.length) % list.length);
-    setFlipped(false);
-  };
-  const mark = (m: "know" | "review") => {
-    if (!card) return;
-    setMarks({ ...marks, [card.id]: m });
-    setFlipped(false);
-    if (hideKnown && m === "know") return;
-    if (list.length > 0) setPos((idx + 1) % list.length);
-  };
-  const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === " " || e.key === "Enter") { e.preventDefault(); setFlipped(!flipped); }
-    else if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
-    else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
-  };
-
-  const deckOptions = [{ value: "All", label: `All decks (${CARDS.length})` }].concat(
-    DECKS.map((d: string) => ({ value: d, label: `${d} (${CARDS.filter((c: Card) => c.deck === d).length})` }))
-  );
-
-  const pct = inDeck.length === 0 ? 0 : Math.round((known / inDeck.length) * 100);
-  const status = card ? marks[card.id] : undefined;
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, fontFamily: t.font.family }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-end" }}>
-        <div style={{ minWidth: 200 }}>
-          <Select label="Deck" options={deckOptions} value={deck} onChange={(v: string) => { setDeck(v); setPos(0); setFlipped(false); }} />
-        </div>
-        <Toggle label="Hide cards I know" value={hideKnown} onChange={(v: boolean) => { setHideKnown(v); setPos(0); setFlipped(false); }} />
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, color: t.text.secondary, fontSize: t.font.label.fontSize }}>
-          <span>Know it: {known} / {inDeck.length} · Review again: {review}</span>
-          <span>{list.length > 0 ? `Card ${idx + 1} of ${list.length}` : ""}</span>
-        </div>
-        <div style={{ height: 6, borderRadius: 3, background: t.border.subtle, overflow: "hidden" }}>
-          <div style={{ width: `${pct}%`, height: "100%", background: t.dataviz.categorical[0], transition: "width 200ms" }} />
-        </div>
-      </div>
-
-      {card ? (
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label={flipped ? "Card back, click to show the question" : "Card front, click to show the answer"}
-          onClick={() => setFlipped(!flipped)}
-          onKeyDown={onKey}
-          style={{ cursor: "pointer", minHeight: 250, padding: "20px 24px", borderRadius: 14, background: t.bg.subtle, border: `2px solid ${flipped ? red : t.border.strong}`, display: "flex", flexDirection: "column", gap: 14, outline: "none", userSelect: "none" }}
-        >
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, fontSize: t.font.label.fontSize, color: faint }}>
-            <span>{card.deck} · {flipped ? "answer" : "question"}</span>
-            <span style={{ color: status === "review" ? red : faint }}>{status === "know" ? "✓ know it" : status === "review" ? "↻ review again" : ""}</span>
-          </div>
-          {!flipped ? (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 14, textAlign: "center" }}>
-              <div style={{ fontSize: 24, lineHeight: "32px", fontWeight: 600, color: ink }}>{card.front}</div>
-              <div style={{ color: red, fontSize: 14, fontStyle: "italic" }}>click to flip ↻</div>
-            </div>
-          ) : (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ color: faint, fontSize: 14 }}>{card.front}</div>
-              <div style={{ height: 2, width: 80, background: red, borderRadius: 1 }} />
-              {card.back.map((line: string, i: number) => (
-                <div key={i} style={{ display: "flex", gap: 8, fontSize: 16, lineHeight: "24px", color: ink }}>
-                  <span style={{ color: red, fontWeight: 700 }}>–</span>
-                  <span style={{ overflowWrap: "anywhere" }}>{line}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ padding: 24, borderRadius: 14, background: t.bg.subtle, border: `2px solid ${t.border.strong}`, color: ink, textAlign: "center" }}>
-          Every card in this deck is marked "know it". Turn off "Hide cards I know" or reset the marks to go again.
-        </div>
-      )}
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <Button label="← Previous" onClick={() => go(-1)} disabled={list.length === 0} />
-        <Button label={flipped ? "Show question" : "Flip"} variant="primary" onClick={() => setFlipped(!flipped)} disabled={!card} />
-        <Button label="Next →" onClick={() => go(1)} disabled={list.length === 0} />
-        <Button label="Shuffle" onClick={() => { setOrder(shuffled(order)); setPos(0); setFlipped(false); }} />
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <Button label="✓ Know it" onClick={() => mark("know")} disabled={!card} />
-        <Button label="↻ Review again" onClick={() => mark("review")} disabled={!card} />
-        <Button label="Reset marks" onClick={() => { setMarks({}); setPos(0); setFlipped(false); }} />
-        <Button label="Original order" onClick={() => { setOrder(CARDS.map((c: Card) => c.id)); setPos(0); setFlipped(false); }} />
-      </div>
-    </div>
-  );
 }
 
 function MindMap() {
@@ -398,18 +230,12 @@ function MindMap() {
 export default function App() {
   return (
     <Page
-      title={`Flashcards & Mind Map: ${DATA.title}`}
-      summary={`${DATA.subtitle ? DATA.subtitle + " " : ""}One mind map of ${MAP.length} branches, then ${CARDS.length} flashcards in ${DECKS.length} decks, one per branch.`}
+      title={`Mind Map: ${DATA.title}`}
+      summary={`${DATA.subtitle ? DATA.subtitle + " " : ""}One mind map of ${MAP.length} branches.`}
       width="column"
     >
-      <Section heading="Mind map">
-        <Text>Key facts and memory hooks. Click a branch to fold or open it.</Text>
-        <MindMap />
-      </Section>
-      <Section heading="Flashcards">
-        <Text>Click the card (or press Space) to flip it. Arrow keys move between cards. Mark each card "know it" or "review again", then turn on "Hide cards I know" to drill only the rest. Marks reset when you reload.</Text>
-        <Flashcards />
-      </Section>
+      <Text>Key facts and memory hooks. Click a branch to fold or open it.</Text>
+      <MindMap />
     </Page>
   );
 }
