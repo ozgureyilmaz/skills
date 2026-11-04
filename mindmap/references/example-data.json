@@ -1,0 +1,195 @@
+{
+  "title": "How HTTPS works",
+  "subtitle": "Example dataset written from general knowledge, not from a source document.",
+  "root": [
+    "How HTTPS",
+    "works"
+  ],
+  "branches": [
+    {
+      "id": "tls",
+      "label": "TLS handshake",
+      "anchor": "RFC 8446 · TLS 1.3 (2018)",
+      "leaves": [
+        {
+          "label": "ClientHello",
+          "value": "ciphers + key share"
+        },
+        {
+          "label": "ServerHello",
+          "value": "picks cipher + key"
+        },
+        {
+          "label": "Certificate",
+          "value": "proves server identity"
+        },
+        {
+          "label": "Finished",
+          "value": "both verify transcript"
+        },
+        {
+          "label": "1-RTT",
+          "value": "one round trip in 1.3"
+        }
+      ],
+      "hook": "hello · cert · keys · finished"
+    },
+    {
+      "id": "crypto",
+      "label": "Cryptography",
+      "anchor": "Diffie & Hellman 1976",
+      "leaves": [
+        {
+          "label": "ECDHE",
+          "value": "ephemeral key exchange"
+        },
+        {
+          "label": "Forward secrecy",
+          "value": "old traffic stays safe"
+        },
+        {
+          "label": "AES-GCM",
+          "value": "bulk encryption"
+        },
+        {
+          "label": "AEAD",
+          "value": "encrypt + authenticate"
+        }
+      ],
+      "hook": "exchange · encrypt · authenticate"
+    },
+    {
+      "id": "pki",
+      "label": "Certificates & PKI",
+      "anchor": "X.509 certificates",
+      "leaves": [
+        {
+          "label": "CA",
+          "value": "signs the server's key"
+        },
+        {
+          "label": "Chain",
+          "value": "leaf → intermediate → root"
+        },
+        {
+          "label": "Trust store",
+          "value": "roots in OS / browser"
+        },
+        {
+          "label": "SAN",
+          "value": "hostnames the cert covers"
+        },
+        {
+          "label": "Revocation",
+          "value": "OCSP, CRL"
+        }
+      ],
+      "hook": "leaf · intermediate · root"
+    },
+    {
+      "id": "http",
+      "label": "HTTP over TLS",
+      "anchor": "Port 443 · https://",
+      "leaves": [
+        {
+          "label": "SNI",
+          "value": "hostname in the hello"
+        },
+        {
+          "label": "ALPN",
+          "value": "picks h2 or http/1.1"
+        },
+        {
+          "label": "HSTS",
+          "value": "force HTTPS next time"
+        },
+        {
+          "label": "HTTP/3",
+          "value": "QUIC over UDP"
+        }
+      ],
+      "hook": "SNI · ALPN · HSTS"
+    },
+    {
+      "id": "threats",
+      "label": "Threats it stops",
+      "anchor": "Model: network attacker",
+      "leaves": [
+        {
+          "label": "Eavesdropping",
+          "value": "traffic encrypted"
+        },
+        {
+          "label": "Tampering",
+          "value": "AEAD tag fails"
+        },
+        {
+          "label": "Impersonation",
+          "value": "cert check fails"
+        },
+        {
+          "label": "Not stopped",
+          "value": "hacked endpoint"
+        }
+      ],
+      "hook": "read · change · pretend"
+    }
+  ],
+  "flashcards": [
+    {
+      "deck": "tls",
+      "front": "★ What does the ClientHello carry?",
+      "back": "Supported TLS versions and cipher suites | A key share for the key exchange | SNI: the hostname it wants"
+    },
+    {
+      "deck": "tls",
+      "front": "How many round trips does a TLS 1.3 handshake take?",
+      "back": "One (1-RTT); resumption can send data in 0-RTT."
+    },
+    {
+      "deck": "tls",
+      "front": "What does the Finished message prove?",
+      "back": "Both sides saw the same handshake transcript, so nothing was altered."
+    },
+    {
+      "deck": "crypto",
+      "front": "★ Forward secrecy",
+      "back": "Ephemeral keys mean a later key leak cannot decrypt past sessions."
+    },
+    {
+      "deck": "crypto",
+      "front": "Asymmetric vs symmetric in HTTPS",
+      "back": "Asymmetric: key exchange and signatures | Symmetric (AES-GCM, ChaCha20): the bulk data"
+    },
+    {
+      "deck": "pki",
+      "front": "★ What does a CA do?",
+      "back": "Signs a certificate binding a public key to a hostname."
+    },
+    {
+      "deck": "pki",
+      "front": "Order of a certificate chain",
+      "back": "Leaf → intermediate → root (root lives in the trust store)."
+    },
+    {
+      "deck": "http",
+      "front": "What is SNI for?",
+      "back": "Tells a shared server which site's certificate to present."
+    },
+    {
+      "deck": "http",
+      "front": "★ HSTS",
+      "back": "A header telling the browser to use only HTTPS for this site from now on."
+    },
+    {
+      "deck": "threats",
+      "front": "★ The 3 attacks HTTPS stops",
+      "back": "Eavesdropping | Tampering | Impersonation"
+    },
+    {
+      "deck": "threats",
+      "front": "What can HTTPS NOT protect against?",
+      "back": "A compromised client or server: data is plaintext at the endpoints."
+    }
+  ]
+}

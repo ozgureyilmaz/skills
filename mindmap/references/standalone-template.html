@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards &amp; Mind Map</title>
+<!--
+  mindmap skill standalone template. Self-contained: no external files, fonts or scripts.
+  Replace ONLY the JSON inside <script type="application/json" id="data"> (schema: data-schema.md),
+  or run: python3 scripts/build_html.py data.json out.html
+-->
+<style>
+  :root {
+    --bg: #ffffff; --paper: #f5f5f3; --ink: #1b1b1b; --ink2: #555555; --faint: #8b8b8b;
+    --red: #d92d20; --accent: #2f6fed; --border: #e2e2e0; --strong: #c9c9c6; --subtle: #ececea;
+    --btn: #ffffff; --btn-hover: #f0f0ee;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212; --paper: #1d1d1f; --ink: #ededed; --ink2: #b4b4b4; --faint: #8e8e93;
+      --red: #ff6b5e; --accent: #6b9bff; --border: #2e2e30; --strong: #48484a; --subtle: #2a2a2c;
+      --btn: #1d1d1f; --btn-hover: #2a2a2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+  .summary { color: var(--ink2); margin: 0 0 20px; }
+  h2 { font-size: 20px; margin: 28px 0 8px; }
+  p.intro { margin: 0 0 12px; }
+  .tabs, .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tabs { border-bottom: 1px solid var(--border); margin-bottom: 8px; gap: 4px; }
+  .tab { background: none; border: none; border-bottom: 2px solid transparent; color: var(--ink2);
+    padding: 8px 12px; font: inherit; font-weight: 600; cursor: pointer; }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+  button.b { font: inherit; font-size: 14px; padding: 6px 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--strong); background: var(--btn); color: var(--ink); }
+  button.b:hover:not(:disabled) { background: var(--btn-hover); }
+  button.b:disabled { opacity: .45; cursor: default; }
+  button.b.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .panel[hidden] { display: none; }
+  /* mind map */
+  svg.map { display: block; width: 100%; height: auto; margin-top: 12px; }
+  svg.map text { font-family: inherit; }
+  .frame { fill: none; stroke: var(--border); stroke-width: 1; }
+  .box { fill: var(--paper); stroke: var(--ink); }
+  .ring { fill: none; stroke: var(--red); stroke-width: 1.6; }
+  .t-ink { fill: var(--ink); } .t-red { fill: var(--red); } .t-faint { fill: var(--faint); }
+  .ln-ink { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+  .ln-faint { fill: none; stroke: var(--faint); stroke-width: 1.3; }
+  .ul-red { fill: none; stroke: var(--red); stroke-width: 1.4; stroke-linecap: round; }
+  .dot-red { fill: var(--red); } .dot-faint { fill: var(--faint); }
+  g.branch { cursor: pointer; } g.branch:focus { outline: none; } g.branch:focus-visible rect { stroke: var(--accent); }
+  /* flashcards */
+  .controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin: 12px 0 16px; }
+  .controls label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ink2); }
+  .controls label.tg { flex-direction: row; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); }
+  select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--strong);
+    background: var(--btn); color: var(--ink); min-width: 200px; }
+  .meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: var(--ink2); font-size: 13px; }
+  .bar { height: 6px; border-radius: 3px; background: var(--subtle); overflow: hidden; margin: 6px 0 16px; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width 200ms; }
+  .card { cursor: pointer; min-height: 250px; padding: 20px 24px; border-radius: 14px; background: var(--paper);
+    border: 2px solid var(--strong); display: flex; flex-direction: column; gap: 14px; outline: none; user-select: none; margin-bottom: 16px; }
+  .card.flipped { border-color: var(--red); }
+  .card:focus-visible { box-shadow: 0 0 0 3px var(--accent); }
+  .card .top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--faint); }
+  .card .top .review { color: var(--red); }
+  .front { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; text-align: center; }
+  .front .q { font-size: 24px; line-height: 32px; font-weight: 600; }
+  .front .hint { color: var(--red); font-size: 14px; font-style: italic; }
+  .back { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .back .q { color: var(--faint); font-size: 14px; }
+  .back .rule { height: 2px; width: 80px; background: var(--red); border-radius: 1px; }
+  .back .line { display: flex; gap: 8px; font-size: 16px; line-height: 24px; }
+  .back .line span:first-child { color: var(--red); font-weight: 700; }
+  .back .line span:last-child { overflow-wrap: anywhere; }
+  .done { padding: 24px; border-radius: 14px; background: var(--paper); border: 2px solid var(--strong); text-align: center; margin-bottom: 16px; }
+  .row + .row { margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title"></h1>
+  <p class="summary" id="summary"></p>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-map" aria-selected="true" aria-controls="panel-map">Mind map</button>
+    <button class="tab" role="tab" id="tab-cards" aria-selected="false" aria-controls="panel-cards">Flashcards</button>
+  </div>
+
+  <section class="panel" id="panel-map" role="tabpanel">
+    <h2>Mind map</h2>
+    <p class="intro">Key facts and memory hooks. Click a branch to fold or open it.</p>
+    <div class="row">
+      <button class="b" id="expand">Expand all</button>
+      <button class="b" id="collapse">Collapse all</button>
+    </div>
+    <div id="mapbox" style="width:100%"></div>
+  </section>
+
+  <section class="panel" id="panel-cards" role="tabpanel" hidden>
+    <h2>Flashcards</h2>
+    <p class="intro">Click the card (or press Space) to flip it. Arrow keys move between cards. Mark each card "know it" or "review again", then turn on "Hide cards I know" to drill only the rest. Marks reset when you reload.</p>
+    <div class="controls">
+      <label>Deck <select id="deck"></select></label>
+      <label class="tg"><input type="checkbox" id="hide"> Hide cards I know</label>
+    </div>
+    <div class="meta"><span id="stats"></span><span id="counter"></span></div>
+    <div class="bar"><div id="progress"></div></div>
+    <div id="cardbox"></div>
+    <div class="row">
+      <button class="b" id="prev">← Previous</button>
+      <button class="b primary" id="flip">Flip</button>
+      <button class="b" id="next">Next →</button>
+      <button class="b" id="shuffle">Shuffle</button>
+    </div>
+    <div class="row">
+      <button class="b" id="know">✓ Know it</button>
+      <button class="b" id="again">↻ Review again</button>
+      <button class="b" id="reset">Reset marks</button>
+      <button class="b" id="orig">Original order</button>
+    </div>
+  </section>
+</main>
+
+<script type="application/json" id="data">
+/*DATA_START*/{
+  "title": "How HTTPS works",
+  "subtitle": "Example dataset written from general knowledge, not from a source document.",
+  "root": ["How HTTPS", "works"],
+  "branches": [
+    { "id": "tls", "label": "TLS handshake", "anchor": "RFC 8446 · TLS 1.3 (2018)", "leaves": [
+      { "label": "ClientHello", "value": "ciphers + key share" },
+      { "label": "ServerHello", "value": "picks cipher + key" },
+      { "label": "Certificate", "value": "proves server identity" },
+      { "label": "Finished", "value": "both verify transcript" },
+      { "label": "1-RTT", "value": "one round trip in 1.3" }
+    ], "hook": "hello · cert · keys · finished" },
+    { "id": "crypto", "label": "Cryptography", "anchor": "Diffie & Hellman 1976", "leaves": [
+      { "label": "ECDHE", "value": "ephemeral key exchange" },
+      { "label": "Forward secrecy", "value": "old traffic stays safe" },
+      { "label": "AES-GCM", "value": "bulk encryption" },
+      { "label": "AEAD", "value": "encrypt + authenticate" }
+    ], "hook": "exchange · encrypt · authenticate" },
+    { "id": "pki", "label": "Certificates & PKI", "anchor": "X.509 certificates", "leaves": [
+      { "label": "CA", "value": "signs the server's key" },
+      { "label": "Chain", "value": "leaf → intermediate → root" },
+      { "label": "Trust store", "value": "roots in OS / browser" },
+      { "label": "SAN", "value": "hostnames the cert covers" },
+      { "label": "Revocation", "value": "OCSP, CRL" }
+    ], "hook": "leaf · intermediate · root" },
+    { "id": "http", "label": "HTTP over TLS", "anchor": "Port 443 · https://", "leaves": [
+      { "label": "SNI", "value": "hostname in the hello" },
+      { "label": "ALPN", "value": "picks h2 or http/1.1" },
+      { "label": "HSTS", "value": "force HTTPS next time" },
+      { "label": "HTTP/3", "value": "QUIC over UDP" }
+    ], "hook": "SNI · ALPN · HSTS" },
+    { "id": "threats", "label": "Threats it stops", "anchor": "Model: network attacker", "leaves": [
+      { "label": "Eavesdropping", "value": "traffic encrypted" },
+      { "label": "Tampering", "value": "AEAD tag fails" },
+      { "label": "Impersonation", "value": "cert check fails" },
+      { "label": "Not stopped", "value": "hacked endpoint" }
+    ], "hook": "read · change · pretend" }
+  ],
+  "flashcards": [
+    { "deck": "tls", "front": "★ What does the ClientHello carry?", "back": "Supported TLS versions and cipher suites | A key share for the key exchange | SNI: the hostname it wants" },
+    { "deck": "tls", "front": "How many round trips does a TLS 1.3 handshake take?", "back": "One (1-RTT); resumption can send data in 0-RTT." },
+    { "deck": "tls", "front": "What does the Finished message prove?", "back": "Both sides saw the same handshake transcript, so nothing was altered." },
+    { "deck": "crypto", "front": "★ Forward secrecy", "back": "Ephemeral keys mean a later key leak cannot decrypt past sessions." },
+    { "deck": "crypto", "front": "Asymmetric vs symmetric in HTTPS", "back": "Asymmetric: key exchange and signatures | Symmetric (AES-GCM, ChaCha20): the bulk data" },
+    { "deck": "pki", "front": "★ What does a CA do?", "back": "Signs a certificate binding a public key to a hostname." },
+    { "deck": "pki", "front": "Order of a certificate chain", "back": "Leaf → intermediate → root (root lives in the trust store)." },
+    { "deck": "http", "front": "What is SNI for?", "back": "Tells a shared server which site's certificate to present." },
+    { "deck": "http", "front": "★ HSTS", "back": "A header telling the browser to use only HTTPS for this site from now on." },
+    { "deck": "threats", "front": "★ The 3 attacks HTTPS stops", "back": "Eavesdropping | Tampering | Impersonation" },
+    { "deck": "threats", "front": "What can HTTPS NOT protect against?", "back": "A compromised client or server: data is plaintext at the endpoints." }
+  ]
+}/*DATA_END*/
+</script>
+
+<script>
+(function () {
+  "use strict";
+  var raw = document.getElementById("data").textContent;
+  raw = raw.replace(/\/\*DATA_(START|END)\*\//g, "");
+  var DATA = JSON.parse(raw);
+  var SVGNS = "http://www.w3.org/2000/svg";
+
+  // ---------- derive model (same rules as the Grok Bot canvas template) ----------
+  function findBranch(d) { for (var i = 0; i < DATA.branches.length; i++) { var b = DATA.branches[i]; if (b.id === d || b.label === d) return b; } return null; }
+  function deckName(d) { var b = findBranch(d); return b ? b.label : d; }
+  var DECKS = DATA.branches.map(function (b) { return b.label; });
+  DATA.flashcards.forEach(function (c) { var n = deckName(c.deck); if (DECKS.indexOf(n) < 0) DECKS.push(n); });
+  var CARDS = [];
+  DECKS.forEach(function (d) {
+    DATA.flashcards.filter(function (c) { return deckName(c.deck) === d; }).forEach(function (c) {
+      CARDS.push({ id: CARDS.length, deck: d, front: c.front, back: Array.isArray(c.back) ? c.back : String(c.back).split(" | ") });
+    });
+    var b = null; DATA.branches.forEach(function (x) { if (x.label === d) b = x; });
+    if (b) CARDS.push({ id: CARDS.length, deck: d, front: "Memory hook: " + b.label, back: [b.anchor, b.hook] });
+  });
+  var MAP = DATA.branches.map(function (b) {
+    var leaves = [{ t: b.anchor, r: true }];
+    b.leaves.forEach(function (l) { leaves.push({ t: l.value ? l.label + ": " + l.value : l.label }); });
+    leaves.push({ t: b.hook, r: true });
+    return { id: b.id, label: b.label, leaves: leaves };
+  });
+  function rootLines() {
+    if (DATA.root && DATA.root.length) return DATA.root.slice(0, 2);
+    var w = DATA.title.split(" "); if (w.length < 2) return [DATA.title];
+    var best = 1, bd = 1e9;
+    for (var i = 1; i < w.length; i++) { var df = Math.abs(w.slice(0, i).join(" ").length - w.slice(i).join(" ").length); if (df < bd) { bd = df; best = i; } }
+    return [w.slice(0, best).join(" "), w.slice(best).join(" ")];
+  }
+
+  document.title = "Flashcards & Mind Map: " + DATA.title;
+  document.getElementById("title").textContent = "Flashcards & Mind Map: " + DATA.title;
+  document.getElementById("summary").textContent = (DATA.subtitle ? DATA.subtitle + " " : "") +
+    "One mind map of " + MAP.length + " branches, then " + CARDS.length + " flashcards in " + DECKS.length + " decks, one per branch.";
+
+  // ---------- tabs ----------
+  var tabMap = document.getElementById("tab-map"), tabCards = document.getElementById("tab-cards");
+  function showTab(map) {
+    tabMap.setAttribute("aria-selected", map ? "true" : "false");
+    tabCards.setAttribute("aria-selected", map ? "false" : "true");
+    document.getElementById("panel-map").hidden = !map;
+    document.getElementById("panel-cards").hidden = map;
+    if (map) renderMap();
+  }
+  tabMap.onclick = function () { showTab(true); };
+  tabCards.onclick = function () { showTab(false); };
+
+  // ---------- mind map ----------
+  var open = {}; MAP.forEach(function (b) { open[b.id] = true; });
+  var mapbox = document.getElementById("mapbox");
+  function el(name, attrs, text) {
+    var e = document.createElementNS(SVGNS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function leafText(parent, lf, x, y) {
+    var g = el("g", {});
+    g.appendChild(el("text", { x: x, y: y + 4.5, "class": lf.r ? "t-red" : "t-ink", "font-size": 13.5, "font-weight": lf.r ? 600 : 400 }, lf.t));
+    if (lf.r) g.appendChild(el("path", { d: "M " + x + " " + (y + 9) + " q " + (lf.t.length * 7) / 2 + " 3 " + lf.t.length * 7 + " 0", "class": "ul-red" }));
+    parent.appendChild(g);
+  }
+  function branchNode(parent, b, x, y, bw, bh) {
+    var isOpen = open[b.id];
+    var g = el("g", { "class": "branch", role: "button", tabindex: 0, "aria-label": (isOpen ? "Collapse " : "Expand ") + b.label, "aria-expanded": isOpen ? "true" : "false" });
+    g.appendChild(el("rect", { x: x, y: y, width: bw, height: bh, rx: 8, "class": "box", "stroke-width": 2 }));
+    g.appendChild(el("text", { x: x + 12, y: y + bh / 2 + 5, "class": "t-ink", "font-size": 14, "font-weight": 600 }, (isOpen ? "− " : "+ ") + b.label));
+    if (!isOpen) g.appendChild(el("text", { x: x + bw - 10, y: y + bh / 2 + 5, "text-anchor": "end", "class": "t-faint", "font-size": 12 }, String(b.leaves.length)));
+    g.addEventListener("click", function () { open[b.id] = !open[b.id]; renderMap(); });
+    g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open[b.id] = !open[b.id]; renderMap(); } });
+    parent.appendChild(g);
+  }
+  function renderMap() {
+    var w = Math.round(mapbox.getBoundingClientRect().width) || 700;
+    var wide = w >= 640, W = Math.max(w, 300), H = 0;
+    var svg = el("svg", { "class": "map", role: "img", "aria-label": "Mind map of " + DATA.title });
+    var layer = el("g", {});
+    if (wide) {
+      var rowH = 25, cx = 6, cw = 128, ch = 66, bx = 156, bw = 182, bh = 32, lx = 370;
+      var lines = rootLines();
+      var longest = Math.max.apply(null, lines.map(function (s) { return s.length; }));
+      var rfs = Math.min(15, Math.floor(118 / Math.max(1, longest * 0.58)));
+      var y = 14, pos = [];
+      MAP.forEach(function (b) {
+        var n = open[b.id] ? b.leaves.length : 0, rows = Math.max(1, n), by = y + (rows * rowH) / 2, lv = [];
+        for (var j = 0; j < n; j++) lv.push(y + j * rowH + rowH / 2);
+        pos.push({ b: b, by: by, leaves: lv }); y += rows * rowH + 12;
+      });
+      H = y + 4; var cy = H / 2;
+      pos.forEach(function (p) {
+        layer.appendChild(el("path", { d: "M " + (cx + cw) + " " + cy + " C " + (cx + cw + 16) + " " + cy + ", " + (bx - 16) + " " + p.by + ", " + bx + " " + p.by, "class": "ln-ink" }));
+        p.leaves.forEach(function (ly, j) {
+          layer.appendChild(el("path", { d: "M " + (bx + bw) + " " + p.by + " C " + (bx + bw + 14) + " " + p.by + ", " + (lx - 24) + " " + ly + ", " + (lx - 10) + " " + ly, "class": "ln-faint" }));
+          layer.appendChild(el("circle", { cx: lx - 8, cy: ly, r: 2.6, "class": p.b.leaves[j].r ? "dot-red" : "dot-faint" }));
+          leafText(layer, p.b.leaves[j], lx, ly);
+        });
+        branchNode(layer, p.b, bx, p.by - bh / 2, bw, bh);
+      });
+      var c = el("g", {});
+      c.appendChild(el("rect", { x: cx - 3, y: cy - ch / 2 - 3, width: cw + 6, height: ch + 6, rx: 14, "class": "ring" }));
+      c.appendChild(el("rect", { x: cx, y: cy - ch / 2, width: cw, height: ch, rx: 11, "class": "box", "stroke-width": 2.4 }));
+      if (lines.length > 1) {
+        c.appendChild(el("text", { x: cx + cw / 2, y: cy - 4, "text-anchor": "middle", "class": "t-ink", "font-size": rfs, "font-weight": 700 }, lines[0]));
+        c.appendChild(el("text", { x: cx + cw / 2, y: cy + 16, "text-anchor": "middle", "class": "t-ink", "font-size": rfs, "font-weight": 700 }, lines[1]));
+      } else {
+        c.appendChild(el("text", { x: cx + cw / 2, y: cy + 5, "text-anchor": "middle", "class": "t-ink", "font-size": rfs, "font-weight": 700 }, lines[0]));
+      }
+      layer.appendChild(c);
+    } else {
+      var rowH2 = 23, trunkX = 18, bx2 = 34, bw2 = Math.min(190, W - 44), bh2 = 30, lx2 = 72;
+      var rw = Math.min(Math.max(DATA.title.length * 8.8 + 28, 160), W - 10);
+      var trunk = el("line", { x1: trunkX, y1: 44, x2: trunkX, "class": "ln-ink" });
+      layer.appendChild(trunk);
+      var c2 = el("g", {});
+      c2.appendChild(el("rect", { x: 4, y: 4, width: rw, height: 40, rx: 10, "class": "box", "stroke-width": 2.4 }));
+      c2.appendChild(el("text", { x: 16, y: 29, "class": "t-ink", "font-size": 15, "font-weight": 700 }, DATA.title));
+      c2.appendChild(el("line", { x1: 14, y1: 46, x2: 14 + Math.min(150, rw - 20), y2: 46, "class": "ul-red", "stroke-width": 1.6 }));
+      layer.appendChild(c2);
+      var y2 = 58, lastBy = 58;
+      MAP.forEach(function (b) {
+        var by = y2 + bh2 / 2; lastBy = by;
+        layer.appendChild(el("line", { x1: trunkX, y1: by, x2: bx2, y2: by, "class": "ln-ink" }));
+        branchNode(layer, b, bx2, y2, bw2, bh2);
+        y2 += bh2 + 6;
+        if (open[b.id]) {
+          var top = y2;
+          b.leaves.forEach(function (lf) {
+            var ly = y2 + rowH2 / 2;
+            layer.appendChild(el("line", { x1: 50, y1: ly, x2: lx2 - 8, y2: ly, "class": "ln-faint" }));
+            leafText(layer, lf, lx2, ly);
+            y2 += rowH2;
+          });
+          layer.appendChild(el("line", { x1: 50, y1: top - 6, x2: 50, y2: y2 - rowH2 / 2, "class": "ln-faint" }));
+        }
+        y2 += 10;
+      });
+      trunk.setAttribute("y2", lastBy);
+      H = y2 + 4;
+    }
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.appendChild(el("rect", { x: 0.5, y: 0.5, width: W - 1, height: H - 1, rx: 12, "class": "frame" }));
+    svg.appendChild(layer);
+    mapbox.innerHTML = ""; mapbox.appendChild(svg);
+  }
+  document.getElementById("expand").onclick = function () { MAP.forEach(function (b) { open[b.id] = true; }); renderMap(); };
+  document.getElementById("collapse").onclick = function () { MAP.forEach(function (b) { open[b.id] = false; }); renderMap(); };
+  var lastW = -1;
+  function onResize() { var w = Math.round(mapbox.getBoundingClientRect().width); if (w !== lastW) { lastW = w; renderMap(); } }
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(onResize).observe(mapbox); else window.addEventListener("resize", onResize);
+
+  // ---------- flashcards ----------
+  var st = { order: CARDS.map(function (c) { return c.id; }), deck: "All", hide: false, pos: 0, flipped: false, marks: {} };
+  var sel = document.getElementById("deck");
+  [["All", "All decks (" + CARDS.length + ")"]].concat(DECKS.map(function (d) {
+    return [d, d + " (" + CARDS.filter(function (c) { return c.deck === d; }).length + ")"];
+  })).forEach(function (o) { var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; sel.appendChild(op); });
+  function inDeck() { return CARDS.filter(function (c) { return st.deck === "All" || c.deck === st.deck; }); }
+  function list() { return st.order.map(function (id) { return CARDS[id]; }).filter(function (c) { return (st.deck === "All" || c.deck === st.deck) && (!st.hide || st.marks[c.id] !== "know"); }); }
+  function cur() { var l = list(); var i = l.length ? Math.min(st.pos, l.length - 1) : 0; return { l: l, i: i, c: l[i] }; }
+  function go(d) { var s = cur(); if (!s.l.length) return; st.pos = (s.i + d + s.l.length) % s.l.length; st.flipped = false; renderCards(); }
+  function mark(m) { var s = cur(); if (!s.c) return; st.marks[s.c.id] = m; st.flipped = false; if (!(st.hide && m === "know") && s.l.length) st.pos = (s.i + 1) % s.l.length; renderCards(); }
+  function flip() { if (!cur().c) return; st.flipped = !st.flipped; renderCards(); }
+  function txt(tag, cls, t) { var e = document.createElement(tag); if (cls) e.className = cls; if (t != null) e.textContent = t; return e; }
+  function renderCards() {
+    var s = cur(), d = inDeck();
+    var known = d.filter(function (c) { return st.marks[c.id] === "know"; }).length;
+    var review = d.filter(function (c) { return st.marks[c.id] === "review"; }).length;
+    document.getElementById("stats").textContent = "Know it: " + known + " / " + d.length + " · Review again: " + review;
+    document.getElementById("counter").textContent = s.l.length ? "Card " + (s.i + 1) + " of " + s.l.length : "";
+    document.getElementById("progress").style.width = (d.length ? Math.round(known / d.length * 100) : 0) + "%";
+    var box = document.getElementById("cardbox"); box.innerHTML = "";
+    if (!s.c) {
+      box.appendChild(txt("div", "done", 'Every card in this deck is marked "know it". Turn off "Hide cards I know" or reset the marks to go again.'));
+    } else {
+      var c = s.c, status = st.marks[c.id];
+      var card = txt("div", "card" + (st.flipped ? " flipped" : ""));
+      card.setAttribute("role", "button"); card.tabIndex = 0;
+      card.setAttribute("aria-label", st.flipped ? "Card back, click to show the question" : "Card front, click to show the answer");
+      var top = txt("div", "top");
+      top.appendChild(txt("span", "", c.deck + " · " + (st.flipped ? "answer" : "question")));
+      top.appendChild(txt("span", status === "review" ? "review" : "", status === "know" ? "✓ know it" : status === "review" ? "↻ review again" : ""));
+      card.appendChild(top);
+      if (!st.flipped) {
+        var f = txt("div", "front"); f.appendChild(txt("div", "q", c.front)); f.appendChild(txt("div", "hint", "click to flip ↻")); card.appendChild(f);
+      } else {
+        var bk = txt("div", "back"); bk.appendChild(txt("div", "q", c.front)); bk.appendChild(txt("div", "rule"));
+        c.back.forEach(function (line) { var r = txt("div", "line"); r.appendChild(txt("span", "", "–")); r.appendChild(txt("span", "", line)); bk.appendChild(r); });
+        card.appendChild(bk);
+      }
+      card.onclick = flip;
+      box.appendChild(card);
+    }
+    document.getElementById("flip").textContent = st.flipped ? "Show question" : "Flip";
+    ["prev", "next"].forEach(function (id) { document.getElementById(id).disabled = !s.l.length; });
+    ["flip", "know", "again"].forEach(function (id) { document.getElementById(id).disabled = !s.c; });
+  }
+  document.addEventListener("keydown", function (e) {
+    if (document.getElementById("panel-cards").hidden) return;
+    var tg = e.target && e.target.tagName;
+    if (tg === "SELECT" || tg === "INPUT" || tg === "BUTTON") return;
+    if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
+  });
+  sel.onchange = function () { st.deck = sel.value; st.pos = 0; st.flipped = false; renderCards(); };
+  document.getElementById("hide").onchange = function (e) { st.hide = e.target.checked; st.pos = 0; st.flipped = false; renderCards(); };
+  document.getElementById("prev").onclick = function () { go(-1); };
+  document.getElementById("next").onclick = function () { go(1); };
+  document.getElementById("flip").onclick = flip;
+  document.getElementById("shuffle").onclick = function () {
+    var a = st.order.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    st.order = a; st.pos = 0; st.flipped = false; renderCards();
+  };
+  document.getElementById("know").onclick = function () { mark("know"); };
+  document.getElementById("again").onclick = function () { mark("review"); };
+  document.getElementById("reset").onclick = function () { st.marks = {}; st.pos = 0; st.flipped = false; renderCards(); };
+  document.getElementById("orig").onclick = function () { st.order = CARDS.map(function (c) { return c.id; }); st.pos = 0; st.flipped = false; renderCards(); };
+
+  if (location.hash === "#flashcards") showTab(false); else renderMap();
+  renderCards();
+})();
+</script>
+</body>
+</html>
