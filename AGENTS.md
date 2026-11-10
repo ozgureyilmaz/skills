@@ -5,5 +5,5 @@ Collection of agent skills for Claude Code, Pi, OpenCode etc. See @README for fu
 ## Rules
 
 - When a skill is added or removed, update the skills table in @README
-- Bash scripts must be compatible with Bash v3.2 (`/bin/bash`), because Codex uses the built-in Bash by default
+- Bash scripts must be compatible with Bash v3.2 (`/bin/bash`)
 - In SKILL.md frontmatter, sort fields alphabetically but always place `description` last

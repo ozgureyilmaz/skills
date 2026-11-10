@@ -1,4 +1,0 @@
-interface:
-  display_name: "Design Eng"
-  short_description: "Design engineering polish and animation guidance"
-  default_prompt: "Use $design-eng to review this interface for polish, motion, and component details."

@@ -20,9 +20,9 @@ paradigmxyz/evmbench
 │   ├── resultsvc/      Results ingestion + persistence
 │   ├── oai_proxy/      Optional OpenAI proxy (proxy-token mode)
 │   ├── prunner/        Optional cleanup of stale workers
-│   ├── worker_runner/  Detect prompt + model map + Codex runner script
+│   ├── worker_runner/  Detect prompt + model map + agent runner script
 │   ├── docker/
-│   │   ├── base/       Base image: codex, foundry, slither, node, tools
+│   │   ├── base/       Base image: agent runtime, foundry, slither, node, tools
 │   │   ├── backend/    Backend services image
 │   │   └── worker/     Worker image + entrypoint
 │   └── compose.yml     Full stack (DB/MQ + services)
@@ -63,7 +63,6 @@ Set the API key for the agent you want to run:
 
 | Variable | Agent |
 |---|---|
-| `OPENAI_API_KEY` | Codex |
 | `ANTHROPIC_API_KEY` | Claude Code |
 | `GEMINI_API_KEY` | Gemini CLI |
 | `OPENROUTER_API_KEY` | OpenCode |
@@ -110,7 +109,7 @@ uv run python -m evmbench.nano.entrypoint \
     evmbench.hint_level=none \
     evmbench.log_to_run_dir=True \
     evmbench.solver=evmbench.nano.solver.EVMbenchSolver \
-    evmbench.solver.agent_id=codex-default \
+    evmbench.solver.agent_id=claude-default \
     runner.concurrency=1
 ```
 
@@ -129,7 +128,6 @@ uv run python -m evmbench.nano.entrypoint \
 
 Set `evmbench.solver.agent_id` to one of:
 - `human` — no-op, for testing harness
-- `codex-default` — OpenAI Codex
 - `claude-default` — Anthropic Claude Code
 - `gemini-default` — Google Gemini CLI
 - `opencode-default` — OpenCode (OpenRouter)
@@ -144,5 +142,5 @@ Outputs go to `project/evmbench/runs/`. Each invocation creates a run-group dire
 
 - EVMBench runs an LLM agent against uploaded, untrusted code
 - Treat the worker runtime (filesystem, logs, outputs) as an **untrusted environment**
-- Audit timeout defaults to 10800 seconds (3 hours), override with `EVM_BENCH_CODEX_TIMEOUT_SECONDS`
+- Check the selected agent's configuration for its audit timeout and supported overrides.
 - See `SECURITY.md` in the repo for the full trust model

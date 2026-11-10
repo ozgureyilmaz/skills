@@ -1,6 +1,7 @@
 ---
 name: mindmap
-description: Turn any complex topic into a collapsible-tree mind map, in one fixed look (root box, foldable branch boxes, short "Label: value" leaves, red-underlined source anchor first and memory hook last, Expand all / Collapse all, vertical tree on phones, light and dark). Use when the user wants to understand, study or revise a topic, a course, lecture slides, a paper, a book chapter, a codebase concept or any document set, or asks for a mind map, a study map, a concept map or "help me see how this fits together". Renders as a Grok Bot Page (canvas) or, in any other agent (Claude Code, Codex, Cursor, etc.), as one self-contained HTML file.
+description: >-
+  Turn any complex topic into a collapsible-tree mind map, in one fixed look (root box, foldable branch boxes, short "Label: value" leaves, red-underlined source anchor first and memory hook last, Expand all / Collapse all, vertical tree on phones, light and dark). Use when the user wants to understand, study or revise a topic, a course, lecture slides, a paper, a book chapter, a codebase concept or any document set, or asks for a mind map, a study map, a concept map or "help me see how this fits together". Renders as a Grok Bot Page (canvas) or, in any other agent (Claude Code, Cursor, etc.), as one self-contained HTML file.
 ---
 
 # Mind map
@@ -48,7 +49,7 @@ Save the dataset as `<topic-slug>.mindmap.json` (schema: `references/data-schema
 3. Call `WriteCanvas` with the full source and the title `Mind Map: <title>`. If it reports a type error, fix it with `EditCanvas` (usually a stray quote or a wrong field type in the data).
 4. Send the user the `url` the tool returned as a markdown link. Pages start private, and the user publishes one with the share button on the Page.
 
-**B. In any other agent (Claude Code, Codex, Cursor, Gemini CLI, etc.)**: write one HTML file.
+**B. In any other agent (Claude Code, Cursor, Gemini CLI, etc.)**: write one HTML file.
 
 1. Save the JSON, then run:
    `python3 <skill-dir>/scripts/build_html.py <topic-slug>.mindmap.json <topic-slug>-mindmap.html`
